@@ -1,0 +1,10 @@
+{
+    "verbose": false,
+    "legacyWatch": true,
+    "restartable": "rs",
+    "ext": "ts",
+    "ignore": ["src/**/*.spec.ts"],
+    "exec": ["ts-node src/index.ts"],
+    "watch": ["src/**/*.ts"]
+  }
+  
