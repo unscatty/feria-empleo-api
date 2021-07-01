@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build.prod": "tsc -p .",
+    "build.prod": "tsc",
     "dev": "nodemon -r tsconfig-paths/register src/server/index.ts",
     "test": "mocha --check-leaks -r ts-node/register -r tsconfig-paths/register \"src/test/**/*.spec.ts\"",
     "nodemon": "concurrently \"npm run build\" \"nodemon dist/index.js\" ",
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.12",
+    "@types/inversify-express-utils": "^2.0.0",
     "@types/morgan": "^1.9.2",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
