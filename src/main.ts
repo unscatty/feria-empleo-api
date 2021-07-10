@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
@@ -11,8 +12,9 @@ async function bootstrap() {
   });
 
   app.enableCors();
-
   app.use(morgan('tiny'));
+
+  app.useGlobalPipes(new ValidationPipe());
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
     logger.log('Listening at http://localhost:' + port);
