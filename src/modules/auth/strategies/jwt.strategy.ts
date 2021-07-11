@@ -1,24 +1,21 @@
+import { BearerStrategy } from 'passport-azure-ad';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { User } from 'src/modules/user/user.entity';
-import { IJwtPayload } from 'src/shared/interfaces/user.interfaces';
 import { Repository } from 'typeorm';
-import { EnvConfig } from '../../../config/config.keys';
+
+import { B2CCallback, B2COptions } from './b2c.conf';
+import { IJwtPayload } from 'src/shared/interfaces/user.interfaces';
+import { User } from 'src/modules/user/user.entity';
+import { PassportStrategy } from '@nestjs/passport';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(BearerStrategy) {
+  public b2c: BearerStrategy;
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private config: ConfigService,
   ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get(EnvConfig.JWT_SECRET),
-    });
+    super(B2COptions, B2CCallback);
   }
 
   async validate(payload: IJwtPayload): Promise<User> {
