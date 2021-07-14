@@ -17,32 +17,12 @@ export enum RoleType {
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('increment') id: number;
 
-  @Column({ type: 'varchar', length: 25, nullable: false })
-  username: string;
-
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', nullable: false })
-  password: string;
-
+  // TODO join with role table
   @Column({ type: 'varchar', nullable: false, default: RoleType.STUDENT })
   role: RoleType;
-
-  @Column({ type: 'varchar', nullable: true })
-  school: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  boleta: string;
-
-  //TODO join with employer table
-  /* @JoinColumn({ name: 'employer_id' })
-  @OneToOne((type) => Employer, {
-    cascade: true,
-    nullable: true,
-    eager: true,
-  })
-  employer: Employer; */
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
