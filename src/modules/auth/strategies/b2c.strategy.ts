@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BearerStrategy, VerifyCallback } from 'passport-azure-ad';
-import { User } from 'src/modules/user/user.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { EnvConfig } from '../../../config/config.keys';
 

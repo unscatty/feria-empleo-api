@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { RoleType } from '../user.entity';
+import { RoleType } from '../entities/user.entity';
 
 /**
  * Dto to pass all filters in endpoint query

@@ -1,5 +1,5 @@
 import { CustomDecorator, SetMetadata } from '@nestjs/common';
-import { RoleType } from 'src/modules/user/user.entity';
+import { RoleType } from 'src/modules/user/entities/user.entity';
 
 /**
  *

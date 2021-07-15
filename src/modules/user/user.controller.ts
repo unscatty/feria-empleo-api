@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Allow } from '../auth/decorators/role.decorator';
 import { CreateUserDto, FilterUsersDto } from './dto';
-import { RoleType } from './user.entity';
+import { RoleType } from './entities/user.entity';
 import { UserService } from './user.service';
 
 @Controller('users')
