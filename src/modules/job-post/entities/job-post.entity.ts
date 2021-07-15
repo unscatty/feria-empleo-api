@@ -35,4 +35,7 @@ export class JobPost extends BaseEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt!: Date;
+
+  // TODO: join with JobPostSkillSet
+  // TODO: join with Candidate
 }
