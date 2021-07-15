@@ -1,7 +1,7 @@
 import { BaseEntity, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
-@Entity('job_apply')
-export class JobApply extends BaseEntity {
+@Entity('job_applications')
+export class JobApplication extends BaseEntity {
   @PrimaryColumn({ name: 'candidate_id' })
   candidateId: number;
 
