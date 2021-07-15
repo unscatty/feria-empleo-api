@@ -1,4 +1,3 @@
-import { User } from 'src/modules/user/entities/user.entity';
 import {
   BaseEntity,
   Column,
@@ -9,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from '../../user/entities/user.entity';
 
 @Entity()
 export class Candidate extends BaseEntity {

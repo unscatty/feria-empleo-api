@@ -16,7 +16,7 @@ export enum RoleType {
   EMPLOYER = 'EMPLOYER',
 }
 
-@Entity('users')
+@Entity('user')
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('increment') id: number;
 
@@ -43,7 +43,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', nullable: false, default: RoleType.STUDENT })
   role: RoleType;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({ type: 'datetime', name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime', name: 'update_at' })
