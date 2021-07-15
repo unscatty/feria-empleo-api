@@ -20,10 +20,6 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
 
-  // TODO join with role table
-  @Column({ type: 'varchar', nullable: false, default: RoleType.STUDENT })
-  role: RoleType;
-
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
