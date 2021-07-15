@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EnvConfig } from './config/config.keys';
-import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CandidateModule } from './modules/candidate/candidate.module';
 import { CompanyModule } from './modules/company/company.module';
+import { DatabaseModule } from './database/database.module';
+import { EnvConfig } from './config/config.keys';
 import { UserModule } from './modules/user/user.module';
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { UserModule } from './modules/user/user.module';
     DatabaseModule,
     UserModule,
     AuthModule,
+    CandidateModule,
     CompanyModule,
   ],
   controllers: [AppController],

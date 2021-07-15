@@ -46,6 +46,6 @@ export class User extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'update_at' })
+  @UpdateDateColumn({ type: 'datetime', name: 'update_at' })
   updateAt: Date;
 }
