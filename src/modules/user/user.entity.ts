@@ -3,16 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-export enum RoleType {
-  ADMIN = 'ADMIN',
-  STUDENT = 'STUDENT',
-  EMPLOYER = 'EMPLOYER',
-}
-
+import { RoleType } from './role';
+export { RoleType } from './role';
+import { Role } from './entities/role.entity';
 @Entity('users')
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('increment') id: number;
@@ -25,4 +23,8 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn({ type: 'timestamp', name: 'update_at' })
   updateAt: Date;
+
+  @OneToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 }
