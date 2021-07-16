@@ -1,8 +1,11 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as morgan from 'morgan';
+import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 import { CustomLogger } from './library/logger';
+
+dotenv.config();
 
 async function bootstrap() {
   const logger = new CustomLogger('Main'); // Main here is just the context
