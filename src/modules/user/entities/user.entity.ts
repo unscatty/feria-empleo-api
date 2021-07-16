@@ -3,19 +3,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
-
-export enum RoleType {
-  ADMIN = 'ADMIN',
-  STUDENT = 'STUDENT',
-  EMPLOYER = 'EMPLOYER',
-}
-
+import { Role } from './role.entity';
+export { RoleType } from './role.entity';
 @Entity('users')
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('increment') id: number;
@@ -39,9 +35,9 @@ export class User extends BaseEntity {
   })
   contactDetail?: ContactDetail;
 
-  // TODO join with role table
-  @Column({ type: 'varchar', nullable: false, default: RoleType.STUDENT })
-  role: RoleType;
+  @OneToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;

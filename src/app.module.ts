@@ -9,7 +9,6 @@ import { CompanyModule } from './modules/company/company.module';
 import { DatabaseModule } from './database/database.module';
 import { EnvConfig } from './config/config.keys';
 import { UserModule } from './modules/user/user.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { JobPostModule } from './modules/job-post/job-post.module';
 @Module({
   imports: [
