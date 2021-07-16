@@ -17,7 +17,7 @@ export const databaseProviders = [
         database: config.get(EnvConfig.DB_DATABASE),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: false,
+        synchronize: config.get(EnvConfig.DB_SYNCHRONIZE, false),
         options: {
           trustServerCertificate: true,
         },
