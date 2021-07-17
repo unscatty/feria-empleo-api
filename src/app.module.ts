@@ -10,6 +10,7 @@ import { DatabaseModule } from './database/database.module';
 import { EnvConfig } from './config/config.keys';
 import { UserModule } from './modules/user/user.module';
 import { JobPostModule } from './modules/job-post/job-post.module';
+import { SkillSetModule } from './modules/skill-set/skill-set.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,6 +22,7 @@ import { JobPostModule } from './modules/job-post/job-post.module';
     CandidateModule,
     CompanyModule,
     JobPostModule,
+    SkillSetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

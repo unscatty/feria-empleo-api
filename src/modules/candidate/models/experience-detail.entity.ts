@@ -12,7 +12,8 @@ import { Candidate } from './candidate.entity';
 
 @Entity()
 export class ExperienceDetail extends BaseEntity {
-  @PrimaryGeneratedColumn('increment') id: number;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Column({ type: 'bit', nullable: false })
   isCurrentjob: boolean;
@@ -35,17 +36,19 @@ export class ExperienceDetail extends BaseEntity {
   @Column({ type: 'varchar', length: 250, nullable: false })
   jobAdress: string;
 
-  @JoinColumn({ name: 'candidate_id' })
-  @ManyToOne(() => Candidate, {
-    cascade: true,
-    nullable: false,
-    eager: true,
-  })
-  candidate: Candidate;
+  // Timestamps
 
-  @CreateDateColumn({ type: 'datetime', name: 'created_at' })
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', name: 'update_at' })
-  updateAt: Date;
+  @UpdateDateColumn({ type: 'datetime' })
+  updatedAt: Date;
+
+  // Relationships
+
+  @JoinColumn()
+  @ManyToOne(() => Candidate, {
+    nullable: false,
+  })
+  candidate: Candidate;
 }

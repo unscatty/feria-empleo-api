@@ -1,16 +1,21 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
+import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 
-@Entity('company')
+@Entity()
 export class Company extends BaseEntity {
-  @PrimaryGeneratedColumn('increment') id: number;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Column({ type: 'varchar' })
   name: string;
@@ -18,19 +23,32 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
-  @Column({ name: 'image_url', type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   imageUrl?: string;
 
-  @Column({ name: 'video_url', type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   videoUrl?: string;
 
   @Column({ type: 'varchar', nullable: true })
   staff?: string;
 
+  // Timestamps
+
+  @CreateDateColumn({ type: 'datetime' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'datetime' })
+  updatedAt: Date;
+
+  // Relationships
+
   @OneToOne(() => User, (user) => user.company, {
     onDelete: 'CASCADE',
     nullable: false,
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn()
   user: User;
+
+  @OneToMany(() => JobPost, (jobPost) => jobPost.company)
+  jobPosts: JobPost[];
 }

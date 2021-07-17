@@ -8,16 +8,28 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
 import { Role } from './role.entity';
 export { RoleType } from './role.entity';
-@Entity('users')
+@Entity()
 export class User extends BaseEntity {
-  @PrimaryGeneratedColumn('increment') id: number;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
+
+  // Timestamps
+
+  @CreateDateColumn({ type: 'datetime' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'datetime' })
+  updatedAt: Date;
+
+  // Relationships
 
   @OneToOne(() => Company, (company) => company.user, {
     eager: true,
@@ -35,13 +47,15 @@ export class User extends BaseEntity {
   })
   contactDetail?: ContactDetail;
 
+  @OneToOne(() => Candidate, (candidate) => candidate.user, {
+    eager: true,
+    nullable: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  candidate?: Candidate;
+
   @OneToOne(() => Role)
-  @JoinColumn({ name: 'role_id' })
+  @JoinColumn()
   role: Role;
-
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime', name: 'update_at' })
-  updateAt: Date;
 }

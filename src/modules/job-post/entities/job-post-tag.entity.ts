@@ -2,12 +2,12 @@ import { BaseEntity, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
 // Intermediate table
 @Entity()
-export class JobApplication extends BaseEntity {
-  @PrimaryColumn()
-  candidateId: number;
-
+export class JobPostTag extends BaseEntity {
   @PrimaryColumn()
   jobPostId: number;
+
+  @PrimaryColumn()
+  tagId: number;
 
   // Timestamps
 
