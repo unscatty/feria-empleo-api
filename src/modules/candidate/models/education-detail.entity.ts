@@ -12,15 +12,8 @@ import { Candidate } from './candidate.entity';
 
 @Entity()
 export class EducationDetail extends BaseEntity {
-  @PrimaryGeneratedColumn('increment') id: number;
-
-  @JoinColumn({ name: 'candidate_id' })
-  @OneToOne(() => Candidate, {
-    cascade: true,
-    nullable: false,
-    eager: true,
-  })
-  candidate: Candidate;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
   institutionName: string;
@@ -40,9 +33,19 @@ export class EducationDetail extends BaseEntity {
   @Column({ type: 'varchar', length: 250, nullable: true })
   description: string;
 
-  @CreateDateColumn({ type: 'datetime', name: 'created_at' })
+  // Timestamps
+
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', name: 'update_at' })
-  updateAt: Date;
+  @UpdateDateColumn({ type: 'datetime' })
+  updatedAt: Date;
+
+  // Relationships
+
+  @OneToOne(() => Candidate, {
+    nullable: false,
+  })
+  @JoinColumn()
+  candidate: Candidate;
 }

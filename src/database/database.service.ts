@@ -2,6 +2,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConnectionOptions } from 'typeorm';
 import { EnvConfig } from '../config/config.keys';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 export const databaseProviders = [
   TypeOrmModule.forRootAsync({
@@ -18,6 +19,7 @@ export const databaseProviders = [
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
         synchronize: config.get(EnvConfig.DB_SYNCHRONIZE, false),
+        namingStrategy: new SnakeNamingStrategy(),
         options: {
           trustServerCertificate: true,
         },

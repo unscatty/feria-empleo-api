@@ -3,19 +3,25 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Candidate } from 'src/modules/candidate/models/candidate.entity';
+import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
+import { Company } from 'src/modules/company/entities/company.entity';
 
-@Entity('job_posts')
+@Entity()
 export class JobPost extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ name: 'is_active', nullable: false, default: true })
+  @Column({ nullable: false, default: true })
   isActive!: boolean;
 
-  @Column({ name: 'job_title', nullable: false })
+  @Column({ nullable: false })
   jobTitle!: string;
 
   @Column({ length: 500 })
@@ -24,18 +30,52 @@ export class JobPost extends BaseEntity {
   @Column()
   requirements: string;
 
-  @Column({ name: 'salary_min' })
+  @Column()
   salaryMin: number;
 
-  @Column({ name: 'salary_max' })
+  @Column()
   salaryMax: number;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  // Timestamps
+
+  @CreateDateColumn({ type: 'datetime' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updatedAt!: Date;
 
-  // TODO: join with JobPostSkillSet
-  // TODO: join with Candidate
+  // Relationships
+
+  @ManyToOne(() => Company, (company) => company.jobPosts)
+  company: Company;
+
+  @ManyToMany(() => Candidate, (candidate) => candidate.jobPosts)
+  @JoinTable({
+    name: 'job_application',
+    joinColumn: {
+      name: 'job_post_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'candidate_id',
+      referencedColumnName: 'id',
+    },
+  })
+  candidates: Candidate[];
+
+  @ManyToMany(() => SkillSet, (skillSet) => skillSet.jobPosts, {
+    cascade: true,
+  })
+  @JoinTable({
+    name: 'job_post_tag',
+    joinColumn: {
+      name: 'job_post_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'tag_id',
+      referencedColumnName: 'id',
+    },
+  })
+  tags: SkillSet[];
 }

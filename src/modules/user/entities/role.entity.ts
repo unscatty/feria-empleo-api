@@ -12,7 +12,7 @@ export enum RoleType {
   EMPLOYER = 'EMPLOYER',
 }
 
-@Entity('roles')
+@Entity()
 export class Role extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -24,6 +24,8 @@ export class Role extends BaseEntity {
   })
   name: RoleType;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  // Timestamps
+
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 }
