@@ -18,7 +18,7 @@ export const databaseProviders = [
         database: config.get(EnvConfig.DB_DATABASE),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: config.get(EnvConfig.DB_SYNCHRONIZE, false),
+        synchronize: config.get('NODE_ENV') != 'production',
         namingStrategy: new SnakeNamingStrategy(),
         options: {
           trustServerCertificate: true,
