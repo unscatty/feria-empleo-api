@@ -4,14 +4,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-
-
-
-
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
@@ -59,6 +55,6 @@ export class User extends BaseEntity {
   })
   candidate?: Candidate;
 
-  @ManyToOne(() => Role, {eager: true})
+  @ManyToOne(() => Role, { eager: true })
   role: Role;
 }

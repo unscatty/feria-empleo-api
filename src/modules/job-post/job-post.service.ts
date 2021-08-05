@@ -196,8 +196,6 @@ export class JobPostService {
         jobPostId,
         candidateId: user.candidate.id,
       });
-      console.log(jobApplication);
-
       await this.jobApplicationRepository.save(jobApplication);
     } catch (error) {
       throw new BadRequestException('FAILED_TO_APPLY_JOB');
