@@ -32,6 +32,9 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   staff?: string;
 
+  @Column({ nullable: false, default: true })
+  isActive!: boolean;
+
   // Timestamps
 
   @CreateDateColumn({ type: 'datetime' })
