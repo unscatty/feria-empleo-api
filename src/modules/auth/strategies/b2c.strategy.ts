@@ -34,7 +34,6 @@ export class B2CStrategy extends PassportStrategy(BearerStrategy) {
     token: any,
     done: VerifyCallback,
   ): Promise<User> {
-    console.log('response', token);
     const email = token.emails[0];
     const user = await this.usersRepository.findOne({ email });
     if (!user) {

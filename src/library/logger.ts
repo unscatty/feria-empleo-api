@@ -84,5 +84,6 @@ export class CustomLogger {
       default:
         break;
     }
+    console.log(result);
   }
 }

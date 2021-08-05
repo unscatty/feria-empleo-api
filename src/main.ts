@@ -14,7 +14,11 @@ async function bootstrap() {
   app.enableCors();
   app.use(morgan('tiny'));
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
     logger.log('Listening at http://localhost:' + port);

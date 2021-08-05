@@ -3,8 +3,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { User } from './user.entity';
 
 export enum RoleType {
   ADMIN = 'ADMIN',
@@ -23,6 +25,9 @@ export class Role extends BaseEntity {
     default: RoleType.STUDENT,
   })
   name: RoleType;
+
+  @OneToMany((type) => User, (user) => user.role)
+  users: User[];
 
   // Timestamps
 

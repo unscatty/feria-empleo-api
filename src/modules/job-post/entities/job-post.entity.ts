@@ -1,3 +1,6 @@
+import { Candidate } from 'src/modules/candidate/models/candidate.entity';
+import { Company } from 'src/modules/company/entities/company.entity';
+import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
 import {
   BaseEntity,
   Column,
@@ -9,9 +12,17 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
-import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
-import { Company } from 'src/modules/company/entities/company.entity';
+
+export enum JobPostType {
+  FULL_TIME = 'full_time',
+  PART_TIME = 'part_time',
+}
+
+export enum JobPostMode {
+  OFFICE = 'office',
+  HYBRID = 'hybrid',
+  HOME_OFFICE = 'home_office',
+}
 
 @Entity()
 export class JobPost extends BaseEntity {
@@ -30,6 +41,22 @@ export class JobPost extends BaseEntity {
   @Column()
   requirements: string;
 
+  @Column({ nullable: true })
+  experience: string;
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column('enum', {
+    enum: JobPostType,
+  })
+  jobType: JobPostType;
+
+  @Column('enum', {
+    enum: JobPostMode,
+  })
+  jobMode: JobPostMode;
+
   @Column()
   salaryMin: number;
 
@@ -46,7 +73,9 @@ export class JobPost extends BaseEntity {
 
   // Relationships
 
-  @ManyToOne(() => Company, (company) => company.jobPosts)
+  @ManyToOne(() => Company, (company) => company.jobPosts, {
+    eager: true,
+  })
   company: Company;
 
   @ManyToMany(() => Candidate, (candidate) => candidate.jobPosts)
