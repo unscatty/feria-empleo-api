@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
-import { InjectRepository } from '@nestjs/typeorm';
 import { BearerStrategy, VerifyCallback } from 'passport-azure-ad';
-import { User } from 'src/modules/user/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PassportStrategy } from '@nestjs/passport';
 import { Repository } from 'typeorm';
+
 import { EnvConfig } from '../../../config/config.keys';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Injectable()
 export class B2CStrategy extends PassportStrategy(BearerStrategy) {

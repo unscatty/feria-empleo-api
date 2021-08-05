@@ -2,14 +2,10 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
-import { CustomLogger } from './library/logger';
+import { CustomLogs } from './library/winston/winston.logs';
 
 async function bootstrap() {
-  const logger = new CustomLogger('Main'); // Main here is just the context
-
-  const app = await NestFactory.create(AppModule, {
-    logger,
-  });
+  const app = await NestFactory.create(AppModule, {});
 
   app.enableCors();
   app.use(morgan('tiny'));
@@ -21,7 +17,7 @@ async function bootstrap() {
   );
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
-    logger.log('Listening at http://localhost:' + port);
+    CustomLogs.logInfo(`Listening at http://localhost:${port}`);
   });
 }
 bootstrap();

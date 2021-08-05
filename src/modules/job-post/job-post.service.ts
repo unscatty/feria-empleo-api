@@ -85,6 +85,7 @@ export class JobPostService {
       newJobPost.company = user.company;
 
       const jobPostRes = await manager.save(newJobPost);
+
       const tags: JobPostTag[] = [];
       const ids = createJobPostDto.skillSetIds;
       // create the corresponding tags and store them in array
@@ -96,6 +97,7 @@ export class JobPostService {
         tags.push(tag);
       }
       try {
+        // save post tags
         await manager.save(tags);
       } catch (err) {
         // error code when entity not exist
