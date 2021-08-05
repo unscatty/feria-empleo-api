@@ -17,11 +17,7 @@ export class Role extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('enum', {
-    enum: RoleType,
-    nullable: false,
-    default: RoleType.STUDENT,
-  })
+  @Column({ type: 'varchar', length: 20, nullable: false, enum: RoleType, default: RoleType.STUDENT })
   name: RoleType;
 
   // Timestamps
