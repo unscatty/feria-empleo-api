@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -55,7 +56,7 @@ export class User extends BaseEntity {
   })
   candidate?: Candidate;
 
-  @OneToOne(() => Role)
+  @ManyToOne(() => Role)
   @JoinColumn()
   role: Role;
 }
