@@ -11,6 +11,7 @@ import { EnvConfig } from './config/config.keys';
 import { UserModule } from './modules/user/user.module';
 import { JobPostModule } from './modules/job-post/job-post.module';
 import { SkillSetModule } from './modules/skill-set/skill-set.module';
+import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,7 @@ import { SkillSetModule } from './modules/skill-set/skill-set.module';
     CompanyModule,
     JobPostModule,
     SkillSetModule,
+    TopJobPostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
