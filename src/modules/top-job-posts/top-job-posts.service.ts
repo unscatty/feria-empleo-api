@@ -29,4 +29,11 @@ export class TopJobPostsService {
       take: limit,
     });
   }
+
+  async topViewed(limit: number) {
+    return this.jobPostRepository.find({
+      order: { views: 'DESC' },
+      take: limit,
+    });
+  }
 }

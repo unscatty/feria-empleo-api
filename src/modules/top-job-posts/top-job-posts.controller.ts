@@ -18,4 +18,10 @@ export class TopJobPostsController {
   topNew(@Query() queryDto: TopJobPostsQueryDto) {
     return this.topJobPostsService.topNew(queryDto.limit);
   }
+
+  @Public()
+  @Get('viewed')
+  topViewed(@Query() queryDto: TopJobPostsQueryDto) {
+    return this.topJobPostsService.topViewed(queryDto.limit);
+  }
 }

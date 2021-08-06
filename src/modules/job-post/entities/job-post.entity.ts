@@ -36,8 +36,11 @@ export class JobPost extends BaseEntity {
   @Column()
   salaryMax: number;
 
-  // Timestamps
+  // For storing view counter
+  @Column({ type: 'integer', default: 0, nullable: false })
+  views: number;
 
+  // Timestamps
   @CreateDateColumn({ type: 'datetime' })
   createdAt!: Date;
 
