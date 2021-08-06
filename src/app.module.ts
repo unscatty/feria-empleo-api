@@ -15,6 +15,7 @@ import { SkillSetModule } from './modules/skill-set/skill-set.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      expandVariables: true,
     }),
     DatabaseModule,
     UserModule,
