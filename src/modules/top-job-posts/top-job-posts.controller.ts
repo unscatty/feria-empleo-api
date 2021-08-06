@@ -12,4 +12,10 @@ export class TopJobPostsController {
   topApplied(@Query() queryDto: TopJobPostsQueryDto) {
     return this.topJobPostsService.topApplied(queryDto.limit);
   }
+
+  @Public()
+  @Get('new')
+  topNew(@Query() queryDto: TopJobPostsQueryDto) {
+    return this.topJobPostsService.topNew(queryDto.limit);
+  }
 }

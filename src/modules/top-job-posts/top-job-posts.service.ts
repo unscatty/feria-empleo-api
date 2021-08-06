@@ -22,4 +22,11 @@ export class TopJobPostsService {
       .limit(limit)
       .getMany();
   }
+
+  async topNew(limit: number) {
+    return this.jobPostRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+  }
 }
