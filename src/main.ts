@@ -5,13 +5,16 @@ import { AppModule } from './app.module';
 import { CustomLogs } from './library/winston/winston.logs';
 
 async function bootstrap() {
-
   const app = await NestFactory.create(AppModule, {});
 
   app.enableCors();
   app.use(morgan('tiny'));
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
     CustomLogs.logInfo(`Listening at http://localhost:${port}`);
