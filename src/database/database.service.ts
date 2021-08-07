@@ -1,8 +1,9 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConnectionOptions } from 'typeorm';
-import { EnvConfig } from '../config/config.keys';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { EnvConfig } from '../config/config.keys';
 
 export const databaseProviders = [
   TypeOrmModule.forRootAsync({

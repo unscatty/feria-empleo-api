@@ -1,14 +1,14 @@
+import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
 import { Role } from './role.entity';
@@ -55,7 +55,6 @@ export class User extends BaseEntity {
   })
   candidate?: Candidate;
 
-  @OneToOne(() => Role)
-  @JoinColumn()
+  @ManyToOne(() => Role, { eager: true })
   role: Role;
 }

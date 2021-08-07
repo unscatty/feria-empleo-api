@@ -17,9 +17,9 @@ export class Role extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('enum', {
+  @Column({
+    type: 'enum',
     enum: RoleType,
-    nullable: false,
     default: RoleType.STUDENT,
   })
   name: RoleType;
