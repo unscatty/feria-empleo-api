@@ -47,12 +47,12 @@ export class JobPost extends BaseEntity {
   @Column({ nullable: true })
   imageUrl: string;
 
-  @Column('enum', {
+  @Column('simple-enum', {
     enum: JobPostType,
   })
   jobType: JobPostType;
 
-  @Column('enum', {
+  @Column('simple-enum', {
     enum: JobPostMode,
   })
   jobMode: JobPostMode;
