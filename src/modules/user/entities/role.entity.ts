@@ -18,7 +18,7 @@ export class Role extends BaseEntity {
   id: number;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: RoleType,
     default: RoleType.STUDENT,
   })
