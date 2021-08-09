@@ -1,3 +1,5 @@
+import { Candidate } from 'src/modules/candidate/models/candidate.entity';
+import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 import {
   BaseEntity,
   Column,
@@ -7,8 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
-import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 
 @Entity()
 export class SkillSet extends BaseEntity {
@@ -17,6 +17,9 @@ export class SkillSet extends BaseEntity {
 
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: false, unique: true })
+  slug: string;
 
   // Timestamps
 

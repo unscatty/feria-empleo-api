@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { CreateSkillSetDto } from '../../skill-set/dto/create-skill-set.dto';
 
 export class CreateJobPostDto {
   @IsNotEmpty()
@@ -26,6 +33,6 @@ export class CreateJobPostDto {
   readonly salaryMax: number;
 
   @IsOptional()
-  @IsNumber({}, { each: true })
-  readonly skillSetIds: number[];
+  @ValidateNested({ each: true })
+  readonly skillSets: CreateSkillSetDto[];
 }

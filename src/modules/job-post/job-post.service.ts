@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,7 +10,15 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { getManager, Repository } from 'typeorm';
+import {
+  EntityManager,
+  FindOneOptions,
+  getManager,
+  InsertResult,
+  Repository,
+} from 'typeorm';
+import { getSlug } from '../../shared/utils/common.utils';
+import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { RoleType, User } from '../user/entities/user.entity';
 import { CreateJobPostDto, FilterJobPostsDto } from './dto';
 import { UpdateJobPostDto } from './dto/update-job-post.dto';
@@ -83,83 +90,70 @@ export class JobPostService {
     return await getManager().transaction(async (manager) => {
       const newJobPost = manager.create(JobPost, createJobPostDto);
       newJobPost.company = user.company;
-
-      const jobPostRes = await manager.save(newJobPost);
-
-      const tags: JobPostTag[] = [];
-      const ids = createJobPostDto.skillSetIds;
-      // create the corresponding tags and store them in array
-      for (let i = 0; i < ids.length; i++) {
-        const tag = manager.create(JobPostTag, {
-          tagId: ids[i],
-          jobPostId: jobPostRes.id,
-        });
-        tags.push(tag);
+      const jobPostSaved = await manager.save(newJobPost);
+      if (createJobPostDto.skillSets && createJobPostDto.skillSets.length > 0) {
+        await this.handleJobPostTags(
+          jobPostSaved.id,
+          createJobPostDto.skillSets,
+          manager,
+        );
       }
-      try {
-        // save post tags
-        await manager.save(tags);
-      } catch (err) {
-        // error code when entity not exist
-        if (err.errno === 1452) {
-          throw new NotFoundException({
-            message: 'skill set id does not exists, id = ' + err.parameters[1],
-          });
-        }
-        throw new InternalServerErrorException(err);
-      }
-      return jobPostRes;
+      return jobPostSaved;
     });
   }
 
   async updateJobPost(
     id: number,
-    updateJobPostDto: UpdateJobPostDto,
+    dto: UpdateJobPostDto,
     user: User,
   ): Promise<JobPost> {
-    const currentJobPost = await this.jobPostRepository.findOne({
-      where: { id },
-    });
+    const findQuery: FindOneOptions<JobPost> = { where: { id } };
+
+    // if a new array of tags is sent join with skillSets
+    if (dto.skillSets) {
+      findQuery.relations = ['tags'];
+    }
+
+    const currentJobPost = await this.jobPostRepository.findOne(findQuery);
+
     // check job post belongs to the company
     if (!currentJobPost || currentJobPost.company.id != user.company.id) {
       throw new NotFoundException('JOB_POST_NOT_FOUND');
     }
     return await getManager().transaction(async (manager) => {
-      if (updateJobPostDto.skillSetIds) {
-        // delete all tags of a job post
-        await manager
-          .createQueryBuilder(JobPostTag, 'job_tag')
-          .delete()
-          .where({ jobPostId: currentJobPost.id })
-          .execute();
+      // update current job post
+      manager.merge(JobPost, currentJobPost, dto);
+      const jobPostRes = await manager.save(currentJobPost);
 
-        // create a new array of tags to insert
-        const tags: JobPostTag[] = [];
-        const ids = updateJobPostDto.skillSetIds;
-        for (let i = 0; i < ids.length; i++) {
-          const tag = manager.create(JobPostTag, {
-            tagId: ids[i],
-            jobPostId: currentJobPost.id,
-          });
-          tags.push(tag);
+      if (dto.skillSets) {
+        const skillSetsWithSlug = this.getSkillSetsWithSlug(dto.skillSets);
+        // get the new skill sets to insert
+        const skillSetsToInsert = skillSetsWithSlug.filter(
+          (s) => !currentJobPost.tags.some((sDb) => sDb.slug === s.slug),
+        );
+
+        // get  skill sets to remove
+        const skillSetsToDelete = currentJobPost.tags.filter(
+          (sDb) => !skillSetsWithSlug.some((s) => sDb.slug === s.slug),
+        );
+
+        if (skillSetsToDelete.length > 0) {
+          await manager
+            .createQueryBuilder()
+            .from(JobPostTag, 'tags')
+            .delete()
+            .where('tag_id IN (:...tags) AND job_post_id = :id', {
+              tags: skillSetsToDelete.map((s) => s.id),
+              id,
+            })
+            .execute();
         }
-        try {
-          await manager.save(tags);
-        } catch (err) {
-          // error code when entity not exist
-          if (err.errno === 1452) {
-            throw new NotFoundException({
-              message:
-                'skill set id does not exists, id = ' + err.parameters[1],
-            });
-          }
-          throw new InternalServerErrorException(err);
+
+        if (skillSetsToInsert.length > 0) {
+          await this.handleJobPostTags(id, skillSetsToInsert, manager);
         }
       }
-
-      // update current job post
-      manager.merge(JobPost, currentJobPost, updateJobPostDto);
-      return manager.save(currentJobPost);
+      return jobPostRes;
     });
   }
 
@@ -201,5 +195,65 @@ export class JobPostService {
       throw new BadRequestException('FAILED_TO_APPLY_JOB');
     }
     return { apply: true };
+  }
+
+  async handleJobPostTags(
+    jobPostId: number,
+    skillSets: { name: string }[],
+    manager: EntityManager,
+  ): Promise<JobPostTag[]> {
+    // get a new array with the slug value
+    const skillSetsWithSlug = this.getSkillSetsWithSlug(skillSets);
+
+    // find all skill sets that already exists in database
+    const skillSetsInDb = await manager
+      .createQueryBuilder(SkillSet, 'skill')
+      .where('skill.slug IN (:slugs)', {
+        slugs: skillSetsWithSlug.map((s) => s.slug),
+      })
+      .getMany();
+
+    // find  skill sets that does not exists in database
+    const newSkillSets = skillSetsWithSlug.filter(
+      (s) => !skillSetsInDb.some((sDb) => sDb.slug === s.slug),
+    );
+
+    let skillSetsInserted: InsertResult = null;
+    if (newSkillSets.length > 0) {
+      // insert all new skill sets
+      skillSetsInserted = await manager
+        .createQueryBuilder()
+        .insert()
+        .into(SkillSet)
+        .values(newSkillSets)
+        .execute();
+    }
+
+    // concat the inserted skillSets with the found skillSets
+    const skillIds: number[] = [
+      ...(skillSetsInserted
+        ? skillSetsInserted.identifiers.map((i) => i.id)
+        : []),
+      ...skillSetsInDb.map((s) => s.id),
+    ];
+    const tags: JobPostTag[] = skillIds.map((id) =>
+      manager.create(JobPostTag, {
+        tagId: id,
+        jobPostId,
+      }),
+    );
+    // save post tags
+    return manager.save(tags);
+  }
+
+  getSkillSetsWithSlug(skillSets: { name: string }[]) {
+    const skillSetsWithSlug: { name: string; slug: string }[] = [];
+    for (const skill of skillSets) {
+      skillSetsWithSlug.push({
+        name: skill.name,
+        slug: getSlug(skill.name),
+      });
+    }
+    return skillSetsWithSlug;
   }
 }
