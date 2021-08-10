@@ -9,13 +9,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { Public } from '../auth/decorators/public.decorator';
+
 import { Allow } from '../auth/decorators/role.decorator';
-import { GetUser } from '../auth/decorators/user.decorator';
-import { RoleType, User } from '../user/entities/user.entity';
 import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
+import { GetUser } from '../auth/decorators/user.decorator';
 import { JobPost } from './entities/job-post.entity';
 import { JobPostService } from './job-post.service';
+import { Public } from '../auth/decorators/public.decorator';
+import { RoleType, User } from '../user/entities/user.entity';
 
 @Controller('job-posts')
 export class JobPostController {
