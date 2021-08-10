@@ -1,10 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 
-import { Allow } from "../auth/decorators/role.decorator";
 import { Company } from "./entities/company.entity";
 import { CompanyService } from "./company.service";
 import { CreateCompanyDto } from "./dto/create-company.dto";
-import { RoleType } from "../user/entities/role.entity";
 
 @Controller('company')
 export class CompanyController {
