@@ -8,10 +8,12 @@ import { CompanyService } from './company.service';
 import { EmailService } from 'src/providers/mail/email.service';
 import { Role } from '../user/entities/role.entity';
 import { User } from '../user/entities/user.entity';
+import { UserModule } from '../user/user.module';
+import { UserService } from '../user/user.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, Company, Role])],
-    controllers: [ CompanyController ],
-    providers: [ CompanyService, EmailService, CompanyEmailService ]
+  imports: [TypeOrmModule.forFeature([User, Company, Role]), UserModule],
+  controllers: [CompanyController],
+  providers: [CompanyService, EmailService, CompanyEmailService, UserService],
 })
 export class CompanyModule {}

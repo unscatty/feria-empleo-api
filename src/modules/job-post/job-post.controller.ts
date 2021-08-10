@@ -37,7 +37,7 @@ export class JobPostController {
   }
 
   @Post()
-  @Allow(RoleType.EMPLOYER)
+  @Allow(RoleType.COMPANY)
   createJobPost(
     @Body() createJobPostDto: CreateJobPostDto,
     @GetUser() user: User,
@@ -46,7 +46,7 @@ export class JobPostController {
   }
 
   @Put('/:id')
-  @Allow(RoleType.EMPLOYER)
+  @Allow(RoleType.COMPANY)
   updateJobPost(
     @Param('id') id: number,
     @Body() updateJobPostDto: UpdateJobPostDto,
@@ -56,7 +56,7 @@ export class JobPostController {
   }
 
   @Delete(':id')
-  @Allow(RoleType.EMPLOYER, RoleType.ADMIN)
+  @Allow(RoleType.COMPANY, RoleType.ADMIN)
   deleteJobPost(
     @Param('id') id: number,
     @GetUser() user: User,
@@ -65,7 +65,7 @@ export class JobPostController {
   }
 
   @Post('/:id/apply')
-  @Allow(RoleType.STUDENT)
+  @Allow(RoleType.CANDIDATE)
   applyToJobPost(
     @Param('id') id: number,
     @GetUser() user: User,
