@@ -20,6 +20,12 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar' })
   name: string;
 
+  @Column({ type: 'varchar' })
+  invitationEmail: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  activeEmail!: string;
+
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
@@ -47,7 +53,7 @@ export class Company extends BaseEntity {
 
   @OneToOne(() => User, (user) => user.company, {
     onDelete: 'CASCADE',
-    nullable: false,
+    nullable: true,
   })
   @JoinColumn()
   user: User;

@@ -8,8 +8,8 @@ import {
 
 export enum RoleType {
   ADMIN = 'ADMIN',
-  STUDENT = 'STUDENT',
-  EMPLOYER = 'EMPLOYER',
+  CANDIDATE = 'CANDIDATE',
+  COMPANY = 'COMPANY',
 }
 
 @Entity()
@@ -20,7 +20,7 @@ export class Role extends BaseEntity {
   @Column({
     type: 'simple-enum',
     enum: RoleType,
-    default: RoleType.STUDENT,
+    default: RoleType.CANDIDATE,
   })
   name: RoleType;
 

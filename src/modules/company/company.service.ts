@@ -1,99 +1,170 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-
-import { Company } from "./entities/company.entity";
-import { CompanyEmailService } from "./company-mail.service";
-import { CreateCompanyDto } from "./dto/create-company.dto";
-import { BadRequestException, NotFoundException } from "src/error/exceptions";
-import { Role } from "../user/entities/role.entity";
-import { RoleType, User } from "../user/entities/user.entity";
-import { head, isEmpty, isUndefined } from "lodash";
-import { companyLabels } from "./company-labels";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { verify } from 'jsonwebtoken';
+import { head, isEmpty, isUndefined } from 'lodash';
+import { EnvConfig } from 'src/config/config.keys';
+import { EntityManager, Repository } from 'typeorm';
+import { CreateUserDto } from '../user/dto';
+import { Role } from '../user/entities/role.entity';
+import { RoleType, User } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
+import { companyLabels } from './company-labels';
+import { CompanyEmailService } from './company-mail.service';
+import { CreateCompanyDto } from './dto/create-company.dto';
+import { Company } from './entities/company.entity';
 
 @Injectable()
 export class CompanyService {
+  constructor(
+    @InjectRepository(Company) private companyRepository: Repository<Company>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Role) private roleRepository: Repository<Role>,
+    private companyEmailService: CompanyEmailService,
+    private config: ConfigService,
+    private userService: UserService,
+  ) {}
 
-    constructor(
-        @InjectRepository(Company) private companyRepository: Repository<Company>,
-        @InjectRepository(User) private userRepository: Repository<User>,
-        @InjectRepository(Role) private roleRepository: Repository<Role>,
-        private companyEmailService: CompanyEmailService
-    ) {}
+  public async createCompany(company: CreateCompanyDto): Promise<Company> {
+    const companyToCreate: Company = await this.fillCompanyToCreate(company);
+    return this.companyRepository.save(companyToCreate);
+  }
 
-    public async createCompany(company: CreateCompanyDto): Promise<Company> {
-        const companyToCreate: Company = await this.fillCompanyToCreate(company);
-        return this.companyRepository.save(companyToCreate);
+  // TODO: check if company already registered
+  public async inviteCompany(
+    companyToInvite: CreateCompanyDto,
+    manager: EntityManager,
+  ): Promise<Company> {
+    const companyToCreate = this.companyRepository.create({
+      invitationEmail: companyToInvite.email,
+      name: companyToInvite.name,
+      activeEmail: companyToInvite.email,
+    });
+
+    const company = await manager.save(companyToCreate);
+
+    await this.companyEmailService.sendInvitation(companyToInvite);
+    return company;
+  }
+
+  public async retrieveCompanies(): Promise<Company[]> {
+    const companyFilter: Company = new Company();
+    companyFilter.isActive = true;
+    let foundCompanies: Company[] = await this.companyRepository.find(
+      companyFilter,
+    );
+    if (isEmpty(foundCompanies)) {
+      throw new NotFoundException(companyLabels.errors.companiesNotFound);
+    }
+    return foundCompanies;
+  }
+
+  public async retrieveOneCompany(companyId: number): Promise<Company> {
+    const companyFilter: Company = new Company();
+    let companyFound: Company;
+    companyFilter.isActive = true;
+    companyFilter.id = companyId;
+    if (isUndefined(companyId)) {
+      throw new BadRequestException(companyLabels.errors.noIdProvided);
+    }
+    companyFound = head(await this.companyRepository.find(companyFilter));
+    if (isUndefined(companyFound)) {
+      throw new NotFoundException(companyLabels.errors.companyNotFound);
+    }
+    return companyFound;
+  }
+
+  // TODO: use transaction
+  public async register(token: string, userDto: CreateUserDto) {
+    const existingCompany = await this.validateInvitationToken(token);
+    const newUser = await this.userService.createCompany(userDto);
+
+    const updatedCompany = await this.companyRepository.save({
+      ...existingCompany,
+      user: newUser,
+    });
+
+    return {
+      company: updatedCompany,
+      user: updatedCompany.user,
+    };
+  }
+
+  public async validateInvitationToken(token: string): Promise<Company> {
+    const payload = await verify(token, this.config.get(EnvConfig.JWT_SECRET), {
+      ignoreExpiration: false,
+    });
+
+    const email = payload['email'] as string;
+
+    const existingCompany = await this.companyRepository.findOne({
+      invitationEmail: email,
+    });
+
+    if (!existingCompany) {
+      throw new NotFoundException('INVITED_COMPANY_NOT_FOUND');
     }
 
-    public async inviteCompany(companyToInvite: CreateCompanyDto): Promise<Company> {
-        await this.companyEmailService.sendInvitation(companyToInvite);
-        const companyToCreate = await this.fillCompanyToCreate(companyToInvite);
-        return this.companyRepository.save(companyToCreate);
+    return existingCompany;
+  }
+
+  public async resendInvitation(companyId: string | number) {
+    const existingCompany = await this.companyRepository.findOne(companyId);
+    if (!existingCompany) {
+      throw new NotFoundException('INVITED_COMPANY_NOT_FOUND');
     }
 
-    public async retrieveCompanies(): Promise<Company[]> {
-        const companyFilter: Company = new Company();
-        companyFilter.isActive = true;
-        let foundCompanies: Company[] = await this.companyRepository.find(companyFilter);
-        if (isEmpty(foundCompanies)) {
-            throw new NotFoundException(companyLabels.errors.companiesNotFound);
-        }
-        return foundCompanies;
-    }
+    await this.companyEmailService.sendInvitation({
+      email: existingCompany.invitationEmail,
+      name: existingCompany.name,
+    });
+  }
 
-    public async retrieveOneCompany(companyId: number): Promise<Company> {
-        const companyFilter: Company = new Company();
-        let companyFound: Company;
-        companyFilter.isActive = true;
-        companyFilter.id = companyId;
-        if (isUndefined(companyId)) { 
-            throw new BadRequestException(companyLabels.errors.noIdProvided);
-        }
-        companyFound = head(await this.companyRepository.find(companyFilter));
-        if (isUndefined(companyFound)) {
-            throw new NotFoundException(companyLabels.errors.companyNotFound);
-        }
-        return companyFound;
+  public async updateCompany(id: number, company: Company): Promise<Company> {
+    let updatedCompany: any;
+    if (isUndefined(id)) {
+      throw new BadRequestException(companyLabels.errors.noIdProvided);
     }
+    updatedCompany = await this.companyRepository.update({ id: id }, company);
+    if (isUndefined(updatedCompany)) {
+      throw new NotFoundException(companyLabels.errors.updateCompanyError);
+    }
+    return company;
+  }
 
-    public async updateCompany(id: number, company: Company): Promise<Company> {
-        let updatedCompany: any;
-        if (isUndefined(id)) {
-            throw new BadRequestException(companyLabels.errors.noIdProvided);
-        }
-        updatedCompany = await this.companyRepository.update({id: id}, company);
-        if (isUndefined(updatedCompany)) {
-            throw new NotFoundException(companyLabels.errors.updateCompanyError);
-        }
-        return company;
+  public async deleteCompany(id: number): Promise<Company> {
+    const companyToDelete: Company = new Company();
+    companyToDelete.isActive = false;
+    if (isUndefined(id)) {
+      throw new BadRequestException(companyLabels.errors.noIdProvided);
     }
+    await this.companyRepository.update({ id: id }, companyToDelete);
+    companyToDelete.id = id;
+    return companyToDelete;
+  }
 
-    public async deleteCompany(id: number): Promise<Company> {
-        const companyToDelete: Company = new Company();
-        companyToDelete.isActive = false;
-        if (isUndefined(id)) { throw new BadRequestException(companyLabels.errors.noIdProvided); }
-        await this.companyRepository.update({id: id}, companyToDelete);
-        companyToDelete.id = id;
-        return companyToDelete;
-    }
+  private async fillCompanyToCreate(
+    company: CreateCompanyDto,
+  ): Promise<Company> {
+    const createdUser: User = await this.createUserForCompany(company);
+    const companyToCreate: Company = new Company();
+    companyToCreate.user = createdUser;
+    return companyToCreate;
+  }
 
-    private async fillCompanyToCreate(company: CreateCompanyDto): Promise<Company> {
-        const createdUser: User = await this.createUserForCompany(company);
-        const companyToCreate: Company = company.company;
-        companyToCreate.user = createdUser;
-        companyToCreate.createdAt = new Date();
-        companyToCreate.updatedAt = companyToCreate.updatedAt;
-        return companyToCreate;
-    }
-
-    private async createUserForCompany(company: CreateCompanyDto): Promise<User> {
-        const user: User = new User();
-        const role: Role = await this.roleRepository.findOne({ name: RoleType.EMPLOYER });
-        user.email = company.email;
-        user.createdAt = new Date();
-        user.updatedAt = user.createdAt;
-        user.role = role;
-        return await this.userRepository.save(user);
-    }
+  private async createUserForCompany(company: CreateCompanyDto): Promise<User> {
+    const user: User = new User();
+    const role: Role = await this.roleRepository.findOne({
+      name: RoleType.COMPANY,
+    });
+    user.email = company.email;
+    user.createdAt = new Date();
+    user.updatedAt = user.createdAt;
+    user.role = role;
+    return await this.userRepository.save(user);
+  }
 }

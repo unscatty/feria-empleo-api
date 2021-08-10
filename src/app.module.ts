@@ -12,6 +12,7 @@ import { UserModule } from './modules/user/user.module';
 import { JobPostModule } from './modules/job-post/job-post.module';
 import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,6 +20,25 @@ import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module'
       expandVariables: true,
     }),
     DatabaseModule,
+    MailerModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          host: config.get(EnvConfig.EMAIL_SERVER),
+          port: +config.get(EnvConfig.EMAIL_PORT),
+          secure: false,
+          authMethod: 'plain',
+          requireTLS: true,
+          auth: {
+            user: config.get(EnvConfig.EMAIL_FROM),
+            pass: config.get(EnvConfig.EMAIL_PASSWORD),
+          },
+        },
+        defaults: {
+          from: `"Feria del empleo ESCOM" <${process.env.EMAIL_FROM}>`,
+        },
+      }),
+      inject: [ConfigService],
+    }),
     UserModule,
     AuthModule,
     CandidateModule,

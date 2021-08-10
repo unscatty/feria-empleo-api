@@ -1,5 +1,9 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { config } from 'dotenv';
+import { ConfigService } from '@nestjs/config';
+// import { config } from 'dotenv';
+import { sign } from 'jsonwebtoken';
+import { EnvConfig } from 'src/config/config.keys';
 import { JWT } from 'src/library/jwt';
 import { CustomLogs } from 'src/library/winston/winston.logs';
 import { Email } from 'src/providers/mail/email';
@@ -9,18 +13,26 @@ import invitationTemplate from 'src/templates/invitation-template';
 import { companyLabels } from './company-labels';
 import { CreateCompanyDto } from './dto/create-company.dto';
 
-config();
+// config();
 
 @Injectable()
 export class CompanyEmailService {
-  constructor(private mailService: EmailService) {}
+  constructor(
+    private mailService: MailerService,
+    private config: ConfigService,
+  ) {}
 
   public async sendInvitation(companyToInvite: CreateCompanyDto) {
     try {
       const url = this.buildUrl(companyToInvite);
       const template = this.setInvitationTemplate(companyToInvite, url);
-      const mail = this.createEmailOptions(companyToInvite, template);
-      await this.mailService.sendEmail(mail);
+      // const mail = this.createEmailOptions(companyToInvite, template);
+
+      await this.mailService.sendMail({
+        to: companyToInvite.email,
+        html: template,
+        subject: companyLabels.mailHeader,
+      });
     } catch (error) {
       CustomLogs.logError(error);
       throw error;
@@ -32,14 +44,23 @@ export class CompanyEmailService {
     url: string,
   ) {
     let template = invitationTemplate;
-    template = template.replace('$name', companyToInvite.company.name);
+    template = template.replace('$name', companyToInvite.name);
     template = template.replace('$url', url);
     return template;
   }
 
   private buildUrl(companyToInvite: CreateCompanyDto): string {
-    const token = JWT.sign(companyToInvite.email);
-    return process.env.CLIENT_URL + '/register-employer?id=' + token;
+    // const token = JWT.sign(companyToInvite.email);
+    const token = sign(
+      { email: companyToInvite.email },
+      this.config.get(EnvConfig.JWT_SECRET),
+      {
+        expiresIn: '7 days',
+      },
+    );
+    return (
+      this.config.get(EnvConfig.CLIENT_URL) + '/register-company?token=' + token
+    );
   }
 
   private createEmailOptions(
