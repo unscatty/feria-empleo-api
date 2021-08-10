@@ -55,6 +55,6 @@ export class User extends BaseEntity {
   })
   candidate?: Candidate;
 
-  @ManyToOne(() => Role, { eager: true })
+  @ManyToOne(() => Role, { eager: true, cascade: true })
   role: Role;
 }

@@ -28,7 +28,7 @@ export class CustomLogger {
     this.loggerOptions = options;
   }
 
-  log(message: string): void {
+  public log(message: string): void {
     const currentDate = new Date();
     this.logger.info(message, {
       timestamp: currentDate.toISOString(),
@@ -36,7 +36,8 @@ export class CustomLogger {
     });
     this.formatedLog('info', message);
   }
-  error(message: string, trace?: any): void {
+
+  public error(message: string, trace?: any): void {
     const currentDate = new Date();
     // i think the trace should be JSON Stringified
     this.logger.error(`${message} -> (${trace || 'trace not provided !'})`, {
@@ -45,7 +46,8 @@ export class CustomLogger {
     });
     this.formatedLog('error', message, trace);
   }
-  warn(message: string): void {
+
+  public warn(message: string): void {
     const currentDate = new Date();
     this.logger.warn(message, {
       timestamp: currentDate.toISOString(),
@@ -53,11 +55,12 @@ export class CustomLogger {
     });
     this.formatedLog('warn', message);
   }
-  overrideOptions(options: LoggerOptions) {
+
+  public overrideOptions(options: LoggerOptions): void {
     this.logger.configure(options);
   }
   // this method just for printing a cool log in your terminal , using chalk
-  private formatedLog(level: string, message: string, error?): void {
+  private formatedLog(level: string, message: string, error?: Error): void {
     let result = '';
     const color = chalk;
     const currentDate = new Date();

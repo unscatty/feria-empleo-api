@@ -1,44 +1,85 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
-
-import { Allow } from "../auth/decorators/role.decorator";
-import { Company } from "./entities/company.entity";
-import { CompanyService } from "./company.service";
-import { CreateCompanyDto } from "./dto/create-company.dto";
-import { RoleType } from "../user/entities/role.entity";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { EntityManager, Transaction, TransactionManager } from 'typeorm';
+import { Public } from '../auth/decorators/public.decorator';
+import { Allow } from '../auth/decorators/role.decorator';
+import { GetUser } from '../auth/decorators/user.decorator';
+import { RegisterGuard } from '../auth/strategies/b2c-register.strategy';
+import { CreateUserDto } from '../user/dto';
+import { RoleType, User } from '../user/entities/user.entity';
+import { CompanyService } from './company.service';
+import { CreateCompanyDto } from './dto/create-company.dto';
+import { Company } from './entities/company.entity';
 
 @Controller('company')
 export class CompanyController {
+  constructor(private companyService: CompanyService) {}
 
-    constructor(private companyService: CompanyService) {}
+  @Post('')
+  @Allow(RoleType.ADMIN)
+  createCompany(@Body() createCompanyDto?: CreateCompanyDto) {
+    return this.companyService.createCompany(createCompanyDto);
+  }
 
-    @Post("")
-    // @Allow(RoleType.ADMIN)
-    createCompany(@Body() createCompanyDto?: CreateCompanyDto) {
-        return this.companyService.createCompany(createCompanyDto);
-    }
+  // TODO: role and auth guards
+  @Post('invite')
+  @Allow(RoleType.ADMIN)
+  @Transaction()
+  inviteCompany(
+    @Body() companyToInvite: CreateCompanyDto,
+    @TransactionManager() manager: EntityManager,
+  ) {
+    return this.companyService.inviteCompany(companyToInvite, manager);
+  }
 
-    @Post("invite")
-    inviteCompany(@Body() companyToInvite: CreateCompanyDto) {
-        return this.companyService.inviteCompany(companyToInvite);
-    }
+  @Post('register')
+  @Public()
+  @UseGuards(RegisterGuard)
+  register(@Body('token') token: string, @GetUser() user: User) {
+    const dto = new CreateUserDto();
+    dto.email = user.email;
+    dto.username = '';
+    return this.companyService.register(token, dto);
+  }
 
-    @Get("")
-    retrieveCompanies() {
-        return this.companyService.retrieveCompanies();
-    }
+  @Post('resend-token/:id')
+  @Public()
+  resendToken(@Param('id') id: string) {
+    this.companyService.resendInvitation(id);
+  }
 
-    @Get(":id")
-    retrieveCompanyById(@Param('id') id: number) {
-        return this.companyService.retrieveOneCompany(id);
-    }
+  @Get('validate-invitation-token')
+  @Public()
+  validateInvitationToken(@Query('token') token: string) {
+    this.companyService.validateInvitationToken(token);
+  }
 
-    @Put(":id")
-    updateCompany(@Param('id') id: number, @Body() company: Company) {
-        return this.companyService.updateCompany(id, company);
-    }
+  @Get('')
+  retrieveCompanies() {
+    return this.companyService.retrieveCompanies();
+  }
 
-    @Delete(":id")
-    deleteCompany(@Param('id') id: number) {
-        return this.companyService.deleteCompany(id);
-    }
+  @Get(':id')
+  retrieveCompanyById(@Param('id') id: number) {
+    return this.companyService.retrieveOneCompany(id);
+  }
+
+  @Put(':id')
+  updateCompany(@Param('id') id: number, @Body() company: Company) {
+    return this.companyService.updateCompany(id, company);
+  }
+
+  @Delete(':id')
+  deleteCompany(@Param('id') id: number) {
+    return this.companyService.deleteCompany(id);
+  }
 }

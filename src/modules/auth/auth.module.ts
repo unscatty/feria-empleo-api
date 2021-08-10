@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { B2CAuthGuard } from './guards/b2c.guard';
 import { ComposeGuard } from './guards/compose.guard';
 import { RoleGuard } from './guards/role.guard';
+import { B2CRegisterStrategy } from './strategies/b2c-register.strategy';
 import { B2CStrategy } from './strategies/b2c.strategy';
 
 @Module({
@@ -21,6 +22,7 @@ import { B2CStrategy } from './strategies/b2c.strategy';
   providers: [
     AuthService,
     B2CStrategy,
+    B2CRegisterStrategy,
     RoleGuard,
     B2CAuthGuard,
     // provide global authentication to protect all endpoints
