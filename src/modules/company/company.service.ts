@@ -9,7 +9,7 @@ import { verify } from 'jsonwebtoken';
 import { isEmpty, isUndefined } from 'lodash';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
 import { RoleType, User } from '../user/entities/user.entity';
@@ -58,14 +58,11 @@ export class CompanyService {
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
-    const companyFilter: Company = new Company();
-    let companyFound: Company;
-    companyFilter.isActive = true;
-    companyFilter.id = companyId;
-    if (isUndefined(companyId)) {
-      throw new BadRequestException(companyLabels.errors.noIdProvided);
-    }
-    companyFound = head(await this.companyRepository.find(companyFilter));
+    const filterQuery: FindConditions<Company> = {
+      isActive: true,
+      id: companyId,
+    };
+    const companyFound = await this.companyRepository.findOne(filterQuery);
     if (isUndefined(companyFound)) {
       throw new NotFoundException(companyLabels.errors.companyNotFound);
     }

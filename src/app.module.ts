@@ -13,6 +13,7 @@ import { JobPostModule } from './modules/job-post/job-post.module';
 import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { CoreModule } from './core/core.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +47,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     JobPostModule,
     SkillSetModule,
     TopJobPostsModule,
+    CoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
