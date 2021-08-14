@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AzureStorageModule } from '@nestjs/azure-storage';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -37,6 +38,14 @@ import { CoreModule } from './core/core.module';
         defaults: {
           from: `"Feria del empleo ESCOM" <${process.env.EMAIL_FROM}>`,
         },
+      }),
+      inject: [ConfigService],
+    }),
+    AzureStorageModule.withConfigAsync({
+      useFactory: (config: ConfigService) => ({
+        sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
+        accountName: config.get(EnvConfig.AZURE_STORAGE_ACCOUNT),
+        containerName: config.get(EnvConfig.AZURE_STORAGE_CONTAINER_NAME),
       }),
       inject: [ConfigService],
     }),
