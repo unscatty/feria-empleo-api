@@ -15,6 +15,7 @@ import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/share.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,14 +42,6 @@ import { CoreModule } from './core/core.module';
       }),
       inject: [ConfigService],
     }),
-    AzureStorageModule.withConfigAsync({
-      useFactory: (config: ConfigService) => ({
-        sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
-        accountName: config.get(EnvConfig.AZURE_STORAGE_ACCOUNT),
-        containerName: config.get(EnvConfig.AZURE_STORAGE_CONTAINER_NAME),
-      }),
-      inject: [ConfigService],
-    }),
     UserModule,
     AuthModule,
     CandidateModule,
@@ -57,6 +50,7 @@ import { CoreModule } from './core/core.module';
     SkillSetModule,
     TopJobPostsModule,
     CoreModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

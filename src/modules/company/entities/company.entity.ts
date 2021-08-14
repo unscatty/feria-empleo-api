@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
+import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
 
 @Entity()
 export class Company extends BaseEntity {
@@ -30,9 +31,6 @@ export class Company extends BaseEntity {
   description?: string;
 
   @Column({ type: 'varchar', nullable: true })
-  imageUrl?: string;
-
-  @Column({ type: 'varchar', nullable: true })
   videoUrl?: string;
 
   @Column({ type: 'varchar', nullable: true })
@@ -50,6 +48,16 @@ export class Company extends BaseEntity {
   updatedAt: Date;
 
   // Relationships
+
+  // Uploaded image
+
+  @OneToOne(() => UploadedImage, {
+    eager: true,
+    nullable: true,
+    cascade: true,
+  })
+  @JoinColumn()
+  image: UploadedImage;
 
   @OneToOne(() => User, (user) => user.company, {
     onDelete: 'CASCADE',
