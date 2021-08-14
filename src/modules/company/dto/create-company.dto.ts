@@ -7,4 +7,7 @@ export class CreateCompanyDto {
 
   @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  imageURL?: string;
 }
