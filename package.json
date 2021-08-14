@@ -65,6 +65,7 @@
     "@types/jsonwebtoken": "^8.5.4",
     "@types/lodash": "^4.14.172",
     "@types/morgan": "^1.9.3",
+    "@types/multer": "^1.4.7",
     "@types/node": "^14.14.36",
     "@types/nodemailer": "^6.4.4",
     "@types/nodemailer-smtp-transport": "^2.7.5",

@@ -4,12 +4,10 @@ import { ConfigService } from '@nestjs/config';
 // import { config } from 'dotenv';
 import { sign } from 'jsonwebtoken';
 import { EnvConfig } from 'src/config/config.keys';
-import { JWT } from 'src/library/jwt';
-import { CustomLogs } from 'src/library/winston/winston.logs';
-import { Email } from 'src/providers/mail/email';
-import { IEmail } from 'src/providers/mail/email.interface';
-import { EmailService } from 'src/providers/mail/email.service';
+import { Email } from 'src/core/providers/mail/email';
+import { IEmail } from 'src/shared/interfaces/';
 import invitationTemplate from 'src/templates/invitation-template';
+import { CustomLogger } from '../../library/logger';
 import { companyLabels } from './company-labels';
 import { CreateCompanyDto } from './dto/create-company.dto';
 
@@ -17,6 +15,7 @@ import { CreateCompanyDto } from './dto/create-company.dto';
 
 @Injectable()
 export class CompanyEmailService {
+  private logger = new CustomLogger('CompanyEmailService');
   constructor(
     private mailService: MailerService,
     private config: ConfigService,
@@ -34,7 +33,7 @@ export class CompanyEmailService {
         subject: companyLabels.mailHeader,
       });
     } catch (error) {
-      CustomLogs.logError(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -75,8 +74,6 @@ export class CompanyEmailService {
       to: companyToInvite.email,
       message: template,
     };
-    console.log(mailOption);
-
     return new Email(mailOption);
   }
 }

@@ -22,7 +22,7 @@ export class FilterJobPostsDto extends PaginationDto {
       return false;
     }
   })
-  readonly isActive: boolean;
+  readonly isActive: boolean = true;
 
   @IsOptional()
   @IsEnum(JobPostType, {

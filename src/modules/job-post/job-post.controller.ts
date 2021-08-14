@@ -7,16 +7,18 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Pagination } from 'nestjs-typeorm-paginate';
-
+import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
-import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { GetUser } from '../auth/decorators/user.decorator';
+import { RoleType, User } from '../user/entities/user.entity';
+import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { JobPost } from './entities/job-post.entity';
 import { JobPostService } from './job-post.service';
-import { Public } from '../auth/decorators/public.decorator';
-import { RoleType, User } from '../user/entities/user.entity';
 
 @Controller('job-posts')
 export class JobPostController {
@@ -38,20 +40,31 @@ export class JobPostController {
 
   @Post()
   @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
   createJobPost(
     @Body() createJobPostDto: CreateJobPostDto,
+    @UploadedFile() image: Express.Multer.File,
     @GetUser() user: User,
   ): Promise<JobPost> {
+    if (image) {
+      createJobPostDto.image = image;
+    }
     return this.jobPostService.createJobPost(createJobPostDto, user);
   }
 
   @Put('/:id')
   @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
   updateJobPost(
     @Param('id') id: number,
+    @UploadedFile() image: Express.Multer.File,
+
     @Body() updateJobPostDto: UpdateJobPostDto,
     @GetUser() user: User,
   ): Promise<JobPost> {
+    if (image) {
+      updateJobPostDto.image = image;
+    }
     return this.jobPostService.updateJobPost(id, updateJobPostDto, user);
   }
 
