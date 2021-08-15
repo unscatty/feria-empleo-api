@@ -1,13 +1,13 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import * as morgan from 'morgan';
-
-import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
 import { AppModule } from './app.module';
-import { CustomLogs } from './library/winston/winston.logs';
-import { HttpExceptionFilter } from './error/httpExceptionFilter';
+import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
+import { HttpExceptionFilter } from './core/exeptions/httpExceptionFilter';
+import { CustomLogger } from './library/logger';
 
 async function bootstrap() {
+  const logger = new CustomLogger('Main');
   const app = await NestFactory.create(AppModule, {});
   applicationInsigthsConfiguration();
   app.enableCors();
@@ -17,11 +17,12 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
     }),
   );
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
-    CustomLogs.logInfo(`Listening at http://localhost:${port}`);
+    logger.log(`Listening at http://localhost:${port}`);
   });
 }
 bootstrap();

@@ -37,11 +37,14 @@ export class JobPostService {
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
     const query = this.jobPostRepository.createQueryBuilder('job_post');
+    query.orderBy('job_post.id', 'DESC');
+
     const paginationOptions: IPaginationOptions = {
       page: dto.page,
       limit: dto.limit,
     };
     if (dto) {
+      query.leftJoinAndSelect('job_post.tags', 'tags');
       if (dto.companyId) {
         query.andWhere('job_post.company = :company', {
           company: dto.companyId,
@@ -68,6 +71,7 @@ export class JobPostService {
           isActive: dto.isActive,
         });
       }
+      query.select(['job_post', 'tags.name']);
     }
     return paginate<JobPost>(query, paginationOptions);
   }
@@ -90,6 +94,13 @@ export class JobPostService {
     return await getManager().transaction(async (manager) => {
       const newJobPost = manager.create(JobPost, createJobPostDto);
       newJobPost.company = user.company;
+
+      // TODO upload file to azure and insert the url
+      if (createJobPostDto.image) {
+        newJobPost.imageUrl =
+          'https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-no-image-available-icon-flat.jpg';
+      }
+
       const jobPostSaved = await manager.save(newJobPost);
       if (createJobPostDto.skillSets && createJobPostDto.skillSets.length > 0) {
         await this.handleJobPostTags(
@@ -123,6 +134,12 @@ export class JobPostService {
     return await getManager().transaction(async (manager) => {
       // update current job post
       manager.merge(JobPost, currentJobPost, dto);
+
+      // TODO upload file to azure and replace the previous image with the newOne
+      if (dto.image) {
+        currentJobPost.imageUrl =
+          'https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-no-image-available-icon-flat.jpg';
+      }
       const jobPostRes = await manager.save(currentJobPost);
 
       if (dto.skillSets) {
