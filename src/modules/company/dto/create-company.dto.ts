@@ -1,5 +1,6 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import { Company } from '../entities/company.entity';
+import { UploadedFileMetadata } from '@nestjs/azure-storage';
+import { Expose } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCompanyDto {
   @IsNotEmpty()
@@ -8,4 +9,7 @@ export class CreateCompanyDto {
 
   @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  imageURL?: string;
 }

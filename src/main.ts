@@ -14,12 +14,12 @@ async function bootstrap() {
   app.use(morgan('tiny'));
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-    }),
-  );
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     whitelist: true,
+  //   }),
+  // );
   const port = AppModule.port || 3000;
   await app.listen(port, () => {
     logger.log(`Listening at http://localhost:${port}`);

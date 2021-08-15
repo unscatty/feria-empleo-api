@@ -1,3 +1,4 @@
+import { UploadedFileMetadata } from '@nestjs/azure-storage';
 import {
   Body,
   Controller,
@@ -7,8 +8,11 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
 import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
@@ -22,7 +26,7 @@ import { Company } from './entities/company.entity';
 
 @Controller('company')
 export class CompanyController {
-  constructor(private companyService: CompanyService) {}
+  constructor(private readonly companyService: CompanyService) {}
 
   @Post('')
   @Allow(RoleType.ADMIN)
@@ -31,14 +35,22 @@ export class CompanyController {
   }
 
   // TODO: role and auth guards
+  // TODO: check if file is an image
   @Post('invite')
-  @Allow(RoleType.ADMIN)
+  @Public()
+  // @Allow(RoleType.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
   @Transaction()
   inviteCompany(
     @Body() companyToInvite: CreateCompanyDto,
+    @UploadedFile() imageFile: UploadedFileMetadata,
     @TransactionManager() manager: EntityManager,
   ) {
-    return this.companyService.inviteCompany(companyToInvite, manager);
+    return this.companyService.inviteCompany(
+      companyToInvite,
+      imageFile,
+      manager,
+    );
   }
 
   @Post('register')

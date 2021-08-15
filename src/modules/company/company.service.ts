@@ -1,4 +1,8 @@
 import {
+  AzureStorageService,
+  UploadedFileMetadata,
+} from '@nestjs/azure-storage';
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -8,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
 import { isEmpty, isUndefined } from 'lodash';
 import { EnvConfig } from 'src/config/config.keys';
+import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
 import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
@@ -21,12 +26,18 @@ import { Company } from './entities/company.entity';
 @Injectable()
 export class CompanyService {
   constructor(
-    @InjectRepository(Company) private companyRepository: Repository<Company>,
-    @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(Role) private roleRepository: Repository<Role>,
+    @InjectRepository(Company)
+    private companyRepository: Repository<Company>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(UploadedImage)
+    private readonly uploadedImageRepository: Repository<UploadedImage>,
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
+    private readonly azureStorage: AzureStorageService,
   ) {}
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
@@ -34,20 +45,56 @@ export class CompanyService {
     return this.companyRepository.save(companyToCreate);
   }
 
+  // TODO: refactor this as separate function
+  private modifyFilename(filename: string, folderName: string): string {
+    return `${folderName}/${new Date().toISOString()}-${filename}`;
+  }
+
+  private async uploadImageFile(
+    imageFile: UploadedFileMetadata,
+    email: string,
+  ) {
+    // Modify filename before uploading
+    imageFile = {
+      ...imageFile,
+      originalname: this.modifyFilename(imageFile.originalname, email),
+    };
+
+    const imageURL = await this.azureStorage.upload(imageFile);
+
+    return this.uploadedImageRepository.create({ imageURL: imageURL });
+  }
+
   // TODO: check if company already registered
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
+    imageFile: UploadedFileMetadata,
     manager: EntityManager,
   ): Promise<Company> {
+    let uploadedImage: UploadedImage;
+
+    if (imageFile) {
+      uploadedImage = await this.uploadImageFile(
+        imageFile,
+        companyToInvite.email,
+      );
+    } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
+      uploadedImage = await this.uploadedImageRepository.create({
+        imageURL: companyToInvite.imageURL,
+      });
+    }
+
     const companyToCreate = this.companyRepository.create({
       invitationEmail: companyToInvite.email,
       name: companyToInvite.name,
       activeEmail: companyToInvite.email,
+      image: uploadedImage,
     });
 
     const company = await manager.save(companyToCreate);
 
     await this.companyEmailService.sendInvitation(companyToInvite);
+
     return company;
   }
 
@@ -163,5 +210,13 @@ export class CompanyService {
     user.updatedAt = user.createdAt;
     user.role = role;
     return await this.userRepository.save(user);
+  }
+
+  private async createImageUpload(imageURL: string): Promise<UploadedImage> {
+    const createdImage = this.uploadedImageRepository.create({
+      imageURL: imageURL,
+    });
+
+    return this.uploadedImageRepository.save(createdImage);
   }
 }

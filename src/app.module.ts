@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AzureStorageModule } from '@nestjs/azure-storage';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -14,6 +15,7 @@ import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/share.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +50,7 @@ import { CoreModule } from './core/core.module';
     SkillSetModule,
     TopJobPostsModule,
     CoreModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
