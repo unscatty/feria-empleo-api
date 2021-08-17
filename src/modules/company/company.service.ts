@@ -6,7 +6,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
-import { head, isEmpty, isUndefined } from 'lodash';
+import { isEmpty, isUndefined } from 'lodash';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
@@ -16,6 +17,7 @@ import { UserService } from '../user/user.service';
 import { companyLabels } from './company-labels';
 import { CompanyEmailService } from './company-mail.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { FilterCompanyDto } from './dto/filter-company.dto';
 import { Company } from './entities/company.entity';
 
 @Injectable()
@@ -51,16 +53,8 @@ export class CompanyService {
     return company;
   }
 
-  public async retrieveCompanies(): Promise<Company[]> {
-    const companyFilter: Company = new Company();
-    companyFilter.isActive = true;
-    let foundCompanies: Company[] = await this.companyRepository.find(
-      companyFilter,
-    );
-    if (isEmpty(foundCompanies)) {
-      throw new NotFoundException(companyLabels.errors.companiesNotFound);
-    }
-    return foundCompanies;
+  public async findAll(dto: FilterCompanyDto): Promise<Pagination<Company>> {
+    return paginate<Company>(this.companyRepository, dto);
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
@@ -136,15 +130,8 @@ export class CompanyService {
     return company;
   }
 
-  public async deleteCompany(id: number): Promise<Company> {
-    const companyToDelete: Company = new Company();
-    companyToDelete.isActive = false;
-    if (isUndefined(id)) {
-      throw new BadRequestException(companyLabels.errors.noIdProvided);
-    }
-    await this.companyRepository.update({ id: id }, companyToDelete);
-    companyToDelete.id = id;
-    return companyToDelete;
+  public async deleteCompany(id: string | number) {
+    return this.companyRepository.delete(id);
   }
 
   private async fillCompanyToCreate(

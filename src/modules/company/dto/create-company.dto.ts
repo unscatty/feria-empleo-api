@@ -1,5 +1,4 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import { Company } from '../entities/company.entity';
+import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCompanyDto {
   @IsNotEmpty()
