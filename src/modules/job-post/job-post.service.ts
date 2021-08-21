@@ -1,3 +1,4 @@
+import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
 import {
   BadRequestException,
   ConflictException,
@@ -5,26 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  IPaginationOptions,
-  paginate,
-  Pagination,
-} from 'nestjs-typeorm-paginate';
-import {
-  EntityManager,
-  FindOneOptions,
-  getManager,
-  InsertResult,
-  Repository,
-} from 'typeorm';
-import { getSlug } from '../../shared/utils/common.utils';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
+import { UploadedImage } from '../../shared/entitities/uploaded-image.entity';
+import { getSlug } from '../../shared/utils';
 import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { RoleType, User } from '../user/entities/user.entity';
-import { CreateJobPostDto, FilterJobPostsDto } from './dto';
-import { UpdateJobPostDto } from './dto/update-job-post.dto';
-import { JobApplication } from './entities/job-application.entity';
-import { JobPostTag } from './entities/job-post-tag.entity';
-import { JobPost } from './entities/job-post.entity';
+import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
+import { JobApplication, JobPost, JobPostTag } from './entities';
 
 @Injectable()
 export class JobPostService {
@@ -33,6 +22,9 @@ export class JobPostService {
     private jobPostRepository: Repository<JobPost>,
     @InjectRepository(JobApplication)
     private jobApplicationRepository: Repository<JobApplication>,
+    @InjectRepository(UploadedImage)
+    private uploadedImageRepository: Repository<UploadedImage>,
+    private readonly azureStorage: AzureStorageService
   ) {}
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -45,6 +37,8 @@ export class JobPostService {
     };
     if (dto) {
       query.leftJoinAndSelect('job_post.tags', 'tags');
+      query.leftJoinAndSelect('job_post.image', 'image');
+
       if (dto.companyId) {
         query.andWhere('job_post.company = :company', {
           company: dto.companyId,
@@ -61,17 +55,16 @@ export class JobPostService {
         });
       }
       if (dto.search) {
-        query.andWhere(
-          '(job_post.job_title LIKE :search OR job_post.description LIKE :search)',
-          { search: `%${dto.search}%` },
-        );
+        query.andWhere('(job_post.job_title LIKE :search OR job_post.description LIKE :search)', {
+          search: `%${dto.search}%`,
+        });
       }
       if (typeof dto.isActive !== 'undefined') {
         query.andWhere('job_post.is_active = :isActive', {
           isActive: dto.isActive,
         });
       }
-      query.select(['job_post', 'tags.name']);
+      query.select(['job_post', 'tags.name', 'image.imageURL']);
     }
     return paginate<JobPost>(query, paginationOptions);
   }
@@ -89,25 +82,22 @@ export class JobPostService {
   async createJobPost(
     createJobPostDto: CreateJobPostDto,
     user: User,
+    image?: UploadedFileMetadata
   ): Promise<JobPost> {
     // start transaction
     return await getManager().transaction(async (manager) => {
       const newJobPost = manager.create(JobPost, createJobPostDto);
       newJobPost.company = user.company;
 
-      // TODO upload file to azure and insert the url
-      if (createJobPostDto.image) {
-        newJobPost.imageUrl =
-          'https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-no-image-available-icon-flat.jpg';
+      if (image) {
+        const imageURL = await this.azureStorage.upload(image);
+        const newImage = this.uploadedImageRepository.create({ imageURL });
+        newJobPost.image = newImage;
       }
 
       const jobPostSaved = await manager.save(newJobPost);
       if (createJobPostDto.skillSets && createJobPostDto.skillSets.length > 0) {
-        await this.handleJobPostTags(
-          jobPostSaved.id,
-          createJobPostDto.skillSets,
-          manager,
-        );
+        await this.handleJobPostTags(jobPostSaved.id, createJobPostDto.skillSets, manager);
       }
       return jobPostSaved;
     });
@@ -117,6 +107,7 @@ export class JobPostService {
     id: number,
     dto: UpdateJobPostDto,
     user: User,
+    image?: UploadedFileMetadata
   ): Promise<JobPost> {
     const findQuery: FindOneOptions<JobPost> = { where: { id } };
 
@@ -135,23 +126,24 @@ export class JobPostService {
       // update current job post
       manager.merge(JobPost, currentJobPost, dto);
 
-      // TODO upload file to azure and replace the previous image with the newOne
-      if (dto.image) {
-        currentJobPost.imageUrl =
-          'https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-no-image-available-icon-flat.jpg';
+      if (image) {
+        const imageURL = await this.azureStorage.upload(image);
+        const newImage = this.uploadedImageRepository.create({ imageURL });
+        currentJobPost.image = newImage;
       }
+
       const jobPostRes = await manager.save(currentJobPost);
 
       if (dto.skillSets) {
         const skillSetsWithSlug = this.getSkillSetsWithSlug(dto.skillSets);
         // get the new skill sets to insert
         const skillSetsToInsert = skillSetsWithSlug.filter(
-          (s) => !currentJobPost.tags.some((sDb) => sDb.slug === s.slug),
+          (s) => !currentJobPost.tags.some((sDb) => sDb.slug === s.slug)
         );
 
         // get  skill sets to remove
         const skillSetsToDelete = currentJobPost.tags.filter(
-          (sDb) => !skillSetsWithSlug.some((s) => sDb.slug === s.slug),
+          (sDb) => !skillSetsWithSlug.some((s) => sDb.slug === s.slug)
         );
 
         if (skillSetsToDelete.length > 0) {
@@ -177,10 +169,7 @@ export class JobPostService {
   async deleteJobPost(id: number, user: User): Promise<JobPost> {
     const currentJobPost = await this.findOneJobPost(id);
     // check job post belongs to the company and is not admin user
-    if (
-      user.role.name !== RoleType.ADMIN &&
-      currentJobPost.company.id != user.company.id
-    ) {
+    if (user.role.name !== RoleType.ADMIN && currentJobPost.company.id != user.company.id) {
       throw new NotFoundException('JOB_POST_NOT_FOUND');
     }
     this.jobPostRepository.merge(currentJobPost, { isActive: false });
@@ -217,7 +206,7 @@ export class JobPostService {
   async handleJobPostTags(
     jobPostId: number,
     skillSets: { name: string }[],
-    manager: EntityManager,
+    manager: EntityManager
   ): Promise<JobPostTag[]> {
     // get a new array with the slug value
     const skillSetsWithSlug = this.getSkillSetsWithSlug(skillSets);
@@ -232,7 +221,7 @@ export class JobPostService {
 
     // find  skill sets that does not exists in database
     const newSkillSets = skillSetsWithSlug.filter(
-      (s) => !skillSetsInDb.some((sDb) => sDb.slug === s.slug),
+      (s) => !skillSetsInDb.some((sDb) => sDb.slug === s.slug)
     );
 
     let skillSetsInserted: InsertResult = null;
@@ -248,16 +237,14 @@ export class JobPostService {
 
     // concat the inserted skillSets with the found skillSets
     const skillIds: number[] = [
-      ...(skillSetsInserted
-        ? skillSetsInserted.identifiers.map((i) => i.id)
-        : []),
+      ...(skillSetsInserted ? skillSetsInserted.identifiers.map((i) => i.id) : []),
       ...skillSetsInDb.map((s) => s.id),
     ];
     const tags: JobPostTag[] = skillIds.map((id) =>
       manager.create(JobPostTag, {
         tagId: id,
         jobPostId,
-      }),
+      })
     );
     // save post tags
     return manager.save(tags);

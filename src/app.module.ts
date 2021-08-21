@@ -16,6 +16,7 @@ import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module'
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/share.module';
+import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     ConfigModule.forRoot({
