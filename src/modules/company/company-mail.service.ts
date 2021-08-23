@@ -58,7 +58,9 @@ export class CompanyEmailService {
       },
     );
     return (
-      this.config.get(EnvConfig.CLIENT_URL) + '/register-company?token=' + token
+      this.config.get(EnvConfig.CLIENT_URL) +
+      '/empresas/verificar-invitacion?token=' +
+      token
     );
   }
 

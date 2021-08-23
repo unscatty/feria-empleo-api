@@ -121,15 +121,11 @@ export class CompanyService {
     const existingCompany = await this.validateInvitationToken(token);
     const newUser = await this.userService.createCompany(userDto);
 
-    const updatedCompany = await this.companyRepository.save({
-      ...existingCompany,
-      user: newUser,
-    });
+    existingCompany.user = newUser;
 
-    return {
-      company: updatedCompany,
-      user: updatedCompany.user,
-    };
+    const updatedCompany = await this.companyRepository.save(existingCompany);
+
+    return updatedCompany;
   }
 
   public async validateInvitationToken(token: string): Promise<Company> {
