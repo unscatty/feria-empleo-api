@@ -10,7 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
-import { isEmpty, isUndefined } from 'lodash';
+import { isUndefined } from 'lodash';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
@@ -39,7 +39,7 @@ export class CompanyService {
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
-    private readonly azureStorage: AzureStorageService,
+    private readonly azureStorage: AzureStorageService
   ) {}
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
@@ -159,11 +159,10 @@ export class CompanyService {
   }
 
   public async updateCompany(id: number, company: Company): Promise<Company> {
-    let updatedCompany: any;
     if (isUndefined(id)) {
       throw new BadRequestException(companyLabels.errors.noIdProvided);
     }
-    updatedCompany = await this.companyRepository.update({ id: id }, company);
+    const updatedCompany = await this.companyRepository.update({ id: id }, company);
     if (isUndefined(updatedCompany)) {
       throw new NotFoundException(companyLabels.errors.updateCompanyError);
     }
@@ -174,9 +173,7 @@ export class CompanyService {
     return this.companyRepository.delete(id);
   }
 
-  private async fillCompanyToCreate(
-    company: CreateCompanyDto,
-  ): Promise<Company> {
+  private async fillCompanyToCreate(company: CreateCompanyDto): Promise<Company> {
     const createdUser: User = await this.createUserForCompany(company);
     const companyToCreate: Company = new Company();
     companyToCreate.user = createdUser;
