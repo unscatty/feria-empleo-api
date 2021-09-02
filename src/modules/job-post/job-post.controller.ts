@@ -26,8 +26,9 @@ export class JobPostController {
   constructor(private readonly jobPostService: JobPostService) {}
 
   @Get()
-  @Public()
-  findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
+  findAllJobPosts(
+    @Query() filterJobPostsDto: FilterJobPostsDto,
+  ): Promise<Pagination<JobPost>> {
     return this.jobPostService.findAllJobPosts(filterJobPostsDto);
   }
 
@@ -67,8 +68,10 @@ export class JobPostController {
   }
 
   @Post('/:id/apply')
-  @Allow(RoleType.CANDIDATE)
-  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
+  applyToJobPost(
+    @Param('id') id: number,
+    @GetUser() user: User,
+  ): Promise<{ apply: boolean }> {
     return this.jobPostService.applyToJobPost(id, user);
   }
 }
