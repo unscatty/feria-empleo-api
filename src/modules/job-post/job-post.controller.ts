@@ -1,3 +1,4 @@
+import { UploadedFileMetadata } from '@nestjs/azure-storage';
 import {
   Body,
   Controller,
@@ -26,9 +27,7 @@ export class JobPostController {
 
   @Get()
   @Public()
-  findAllJobPosts(
-    @Query() filterJobPostsDto: FilterJobPostsDto,
-  ): Promise<Pagination<JobPost>> {
+  findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
     return this.jobPostService.findAllJobPosts(filterJobPostsDto);
   }
 
@@ -43,13 +42,10 @@ export class JobPostController {
   @UseInterceptors(FileInterceptor('image'))
   createJobPost(
     @Body() createJobPostDto: CreateJobPostDto,
-    @UploadedFile() image: Express.Multer.File,
-    @GetUser() user: User,
+    @UploadedFile() image: UploadedFileMetadata,
+    @GetUser() user: User
   ): Promise<JobPost> {
-    if (image) {
-      createJobPostDto.image = image;
-    }
-    return this.jobPostService.createJobPost(createJobPostDto, user);
+    return this.jobPostService.createJobPost(createJobPostDto, user, image);
   }
 
   @Put('/:id')
@@ -57,32 +53,22 @@ export class JobPostController {
   @UseInterceptors(FileInterceptor('image'))
   updateJobPost(
     @Param('id') id: number,
-    @UploadedFile() image: Express.Multer.File,
-
+    @UploadedFile() image: UploadedFileMetadata,
     @Body() updateJobPostDto: UpdateJobPostDto,
-    @GetUser() user: User,
+    @GetUser() user: User
   ): Promise<JobPost> {
-    if (image) {
-      updateJobPostDto.image = image;
-    }
-    return this.jobPostService.updateJobPost(id, updateJobPostDto, user);
+    return this.jobPostService.updateJobPost(id, updateJobPostDto, user, image);
   }
 
   @Delete(':id')
   @Allow(RoleType.COMPANY, RoleType.ADMIN)
-  deleteJobPost(
-    @Param('id') id: number,
-    @GetUser() user: User,
-  ): Promise<JobPost> {
+  deleteJobPost(@Param('id') id: number, @GetUser() user: User): Promise<JobPost> {
     return this.jobPostService.deleteJobPost(id, user);
   }
 
   @Post('/:id/apply')
   @Allow(RoleType.CANDIDATE)
-  applyToJobPost(
-    @Param('id') id: number,
-    @GetUser() user: User,
-  ): Promise<{ apply: boolean }> {
+  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
     return this.jobPostService.applyToJobPost(id, user);
   }
 }

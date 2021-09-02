@@ -1,12 +1,5 @@
-import {
-  AzureStorageService,
-  UploadedFileMetadata,
-} from '@nestjs/azure-storage';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
@@ -37,7 +30,7 @@ export class CompanyService {
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
-    private readonly azureStorage: AzureStorageService,
+    private readonly azureStorage: AzureStorageService
   ) {}
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
@@ -50,10 +43,7 @@ export class CompanyService {
     return `${folderName}/${new Date().toISOString()}-${filename}`;
   }
 
-  private async uploadImageFile(
-    imageFile: UploadedFileMetadata,
-    email: string,
-  ) {
+  private async uploadImageFile(imageFile: UploadedFileMetadata, email: string) {
     // Modify filename before uploading
     imageFile = {
       ...imageFile,
@@ -69,15 +59,12 @@ export class CompanyService {
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
     imageFile: UploadedFileMetadata,
-    manager: EntityManager,
+    manager: EntityManager
   ): Promise<Company> {
     let uploadedImage: UploadedImage;
 
     if (imageFile) {
-      uploadedImage = await this.uploadImageFile(
-        imageFile,
-        companyToInvite.email,
-      );
+      uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
     } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
       uploadedImage = await this.uploadedImageRepository.create({
         imageURL: companyToInvite.imageURL,
@@ -101,9 +88,7 @@ export class CompanyService {
   public async retrieveCompanies(): Promise<Company[]> {
     const companyFilter: Company = new Company();
     companyFilter.isActive = true;
-    const foundCompanies: Company[] = await this.companyRepository.find(
-      companyFilter,
-    );
+    const foundCompanies: Company[] = await this.companyRepository.find(companyFilter);
     if (isEmpty(foundCompanies)) {
       throw new NotFoundException(companyLabels.errors.companiesNotFound);
     }
@@ -169,11 +154,10 @@ export class CompanyService {
   }
 
   public async updateCompany(id: number, company: Company): Promise<Company> {
-    let updatedCompany: any;
     if (isUndefined(id)) {
       throw new BadRequestException(companyLabels.errors.noIdProvided);
     }
-    updatedCompany = await this.companyRepository.update({ id: id }, company);
+    const updatedCompany = await this.companyRepository.update({ id: id }, company);
     if (isUndefined(updatedCompany)) {
       throw new NotFoundException(companyLabels.errors.updateCompanyError);
     }
@@ -191,9 +175,7 @@ export class CompanyService {
     return companyToDelete;
   }
 
-  private async fillCompanyToCreate(
-    company: CreateCompanyDto,
-  ): Promise<Company> {
+  private async fillCompanyToCreate(company: CreateCompanyDto): Promise<Company> {
     const createdUser: User = await this.createUserForCompany(company);
     const companyToCreate: Company = new Company();
     companyToCreate.user = createdUser;
