@@ -1,14 +1,17 @@
 import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import { Company } from 'src/modules/company/entities/company.entity';
 import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
+import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -38,14 +41,19 @@ export class JobPost extends BaseEntity {
   @Column({ length: 500 })
   description: string;
 
-  @Column()
+  @Column({ length: 2000 })
   requirements: string;
 
   @Column({ nullable: true })
   experience: string;
 
-  @Column({ nullable: true })
-  imageUrl: string;
+  @OneToOne(() => UploadedImage, {
+    eager: true,
+    nullable: true,
+    cascade: true,
+  })
+  @JoinColumn()
+  image: UploadedImage;
 
   @Column('simple-enum', {
     enum: JobPostType,

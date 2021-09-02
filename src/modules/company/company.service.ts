@@ -1,14 +1,12 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
-import { head, isEmpty, isUndefined } from 'lodash';
+import { isEmpty, isUndefined } from 'lodash';
 import { EnvConfig } from 'src/config/config.keys';
-import { EntityManager, Repository } from 'typeorm';
+import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
 import { RoleType, User } from '../user/entities/user.entity';
@@ -21,12 +19,18 @@ import { Company } from './entities/company.entity';
 @Injectable()
 export class CompanyService {
   constructor(
-    @InjectRepository(Company) private companyRepository: Repository<Company>,
-    @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(Role) private roleRepository: Repository<Role>,
+    @InjectRepository(Company)
+    private companyRepository: Repository<Company>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(UploadedImage)
+    private readonly uploadedImageRepository: Repository<UploadedImage>,
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
+    private readonly azureStorage: AzureStorageService
   ) {}
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
@@ -34,29 +38,57 @@ export class CompanyService {
     return this.companyRepository.save(companyToCreate);
   }
 
+  // TODO: refactor this as separate function
+  private modifyFilename(filename: string, folderName: string): string {
+    return `${folderName}/${new Date().toISOString()}-${filename}`;
+  }
+
+  private async uploadImageFile(imageFile: UploadedFileMetadata, email: string) {
+    // Modify filename before uploading
+    imageFile = {
+      ...imageFile,
+      originalname: this.modifyFilename(imageFile.originalname, email),
+    };
+
+    const imageURL = await this.azureStorage.upload(imageFile);
+
+    return this.uploadedImageRepository.create({ imageURL: imageURL });
+  }
+
   // TODO: check if company already registered
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
-    manager: EntityManager,
+    imageFile: UploadedFileMetadata,
+    manager: EntityManager
   ): Promise<Company> {
+    let uploadedImage: UploadedImage;
+
+    if (imageFile) {
+      uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
+    } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
+      uploadedImage = await this.uploadedImageRepository.create({
+        imageURL: companyToInvite.imageURL,
+      });
+    }
+
     const companyToCreate = this.companyRepository.create({
       invitationEmail: companyToInvite.email,
       name: companyToInvite.name,
       activeEmail: companyToInvite.email,
+      image: uploadedImage,
     });
 
     const company = await manager.save(companyToCreate);
 
     await this.companyEmailService.sendInvitation(companyToInvite);
+
     return company;
   }
 
   public async retrieveCompanies(): Promise<Company[]> {
     const companyFilter: Company = new Company();
     companyFilter.isActive = true;
-    let foundCompanies: Company[] = await this.companyRepository.find(
-      companyFilter,
-    );
+    const foundCompanies: Company[] = await this.companyRepository.find(companyFilter);
     if (isEmpty(foundCompanies)) {
       throw new NotFoundException(companyLabels.errors.companiesNotFound);
     }
@@ -64,14 +96,11 @@ export class CompanyService {
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
-    const companyFilter: Company = new Company();
-    let companyFound: Company;
-    companyFilter.isActive = true;
-    companyFilter.id = companyId;
-    if (isUndefined(companyId)) {
-      throw new BadRequestException(companyLabels.errors.noIdProvided);
-    }
-    companyFound = head(await this.companyRepository.find(companyFilter));
+    const filterQuery: FindConditions<Company> = {
+      isActive: true,
+      id: companyId,
+    };
+    const companyFound = await this.companyRepository.findOne(filterQuery);
     if (isUndefined(companyFound)) {
       throw new NotFoundException(companyLabels.errors.companyNotFound);
     }
@@ -125,11 +154,10 @@ export class CompanyService {
   }
 
   public async updateCompany(id: number, company: Company): Promise<Company> {
-    let updatedCompany: any;
     if (isUndefined(id)) {
       throw new BadRequestException(companyLabels.errors.noIdProvided);
     }
-    updatedCompany = await this.companyRepository.update({ id: id }, company);
+    const updatedCompany = await this.companyRepository.update({ id: id }, company);
     if (isUndefined(updatedCompany)) {
       throw new NotFoundException(companyLabels.errors.updateCompanyError);
     }
@@ -147,9 +175,7 @@ export class CompanyService {
     return companyToDelete;
   }
 
-  private async fillCompanyToCreate(
-    company: CreateCompanyDto,
-  ): Promise<Company> {
+  private async fillCompanyToCreate(company: CreateCompanyDto): Promise<Company> {
     const createdUser: User = await this.createUserForCompany(company);
     const companyToCreate: Company = new Company();
     companyToCreate.user = createdUser;
@@ -166,5 +192,13 @@ export class CompanyService {
     user.updatedAt = user.createdAt;
     user.role = role;
     return await this.userRepository.save(user);
+  }
+
+  private async createImageUpload(imageURL: string): Promise<UploadedImage> {
+    const createdImage = this.uploadedImageRepository.create({
+      imageURL: imageURL,
+    });
+
+    return this.uploadedImageRepository.save(createdImage);
   }
 }

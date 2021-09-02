@@ -1,3 +1,4 @@
+import { UploadedFileMetadata } from '@nestjs/azure-storage';
 import {
   Body,
   Controller,
@@ -7,16 +8,18 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Pagination } from 'nestjs-typeorm-paginate';
-
+import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
-import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { GetUser } from '../auth/decorators/user.decorator';
+import { RoleType, User } from '../user/entities/user.entity';
+import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { JobPost } from './entities/job-post.entity';
 import { JobPostService } from './job-post.service';
-import { Public } from '../auth/decorators/public.decorator';
-import { RoleType, User } from '../user/entities/user.entity';
 
 @Controller('job-posts')
 export class JobPostController {
@@ -24,9 +27,7 @@ export class JobPostController {
 
   @Get()
   @Public()
-  findAllJobPosts(
-    @Query() filterJobPostsDto: FilterJobPostsDto,
-  ): Promise<Pagination<JobPost>> {
+  findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
     return this.jobPostService.findAllJobPosts(filterJobPostsDto);
   }
 
@@ -38,38 +39,36 @@ export class JobPostController {
 
   @Post()
   @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
   createJobPost(
     @Body() createJobPostDto: CreateJobPostDto,
-    @GetUser() user: User,
+    @UploadedFile() image: UploadedFileMetadata,
+    @GetUser() user: User
   ): Promise<JobPost> {
-    return this.jobPostService.createJobPost(createJobPostDto, user);
+    return this.jobPostService.createJobPost(createJobPostDto, user, image);
   }
 
   @Put('/:id')
   @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
   updateJobPost(
     @Param('id') id: number,
+    @UploadedFile() image: UploadedFileMetadata,
     @Body() updateJobPostDto: UpdateJobPostDto,
-    @GetUser() user: User,
+    @GetUser() user: User
   ): Promise<JobPost> {
-    return this.jobPostService.updateJobPost(id, updateJobPostDto, user);
+    return this.jobPostService.updateJobPost(id, updateJobPostDto, user, image);
   }
 
   @Delete(':id')
   @Allow(RoleType.COMPANY, RoleType.ADMIN)
-  deleteJobPost(
-    @Param('id') id: number,
-    @GetUser() user: User,
-  ): Promise<JobPost> {
+  deleteJobPost(@Param('id') id: number, @GetUser() user: User): Promise<JobPost> {
     return this.jobPostService.deleteJobPost(id, user);
   }
 
   @Post('/:id/apply')
   @Allow(RoleType.CANDIDATE)
-  applyToJobPost(
-    @Param('id') id: number,
-    @GetUser() user: User,
-  ): Promise<{ apply: boolean }> {
+  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
     return this.jobPostService.applyToJobPost(id, user);
   }
 }

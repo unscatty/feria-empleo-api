@@ -1,4 +1,4 @@
-const invitationTemplate: string = `
+const invitationTemplate = `
     <h1>¡Hola $name!</h1>
     <p>
         A través del portal de la feria del empleo de ESCOM se le ha enviado una invitación para que se pueda registrar

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AzureStorageModule } from '@nestjs/azure-storage';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,6 +14,9 @@ import { JobPostModule } from './modules/job-post/job-post.module';
 import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/share.module';
+import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +50,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
     JobPostModule,
     SkillSetModule,
     TopJobPostsModule,
+    CoreModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
