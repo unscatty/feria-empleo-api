@@ -54,6 +54,11 @@ export class JobPostService {
           jobType: dto.jobType,
         });
       }
+      if (dto.experience) {
+        query.andWhere('job_post.experience = :experience', {
+          experience: dto.experience,
+        });
+      }
       if (dto.search) {
         query.andWhere('(job_post.job_title LIKE :search OR job_post.description LIKE :search)', {
           search: `%${dto.search}%`,
@@ -66,6 +71,7 @@ export class JobPostService {
       }
       query.select(['job_post', 'tags.name', 'image.imageURL']);
     }
+    query.innerJoinAndSelect('job_post.company', 'company');
     return paginate<JobPost>(query, paginationOptions);
   }
 
@@ -185,7 +191,7 @@ export class JobPostService {
     // find if user already apply to job
     const jobApplication = this.jobApplicationRepository.findOne({
       jobPostId,
-      candidateId: user.candidate.id,
+      candidateId: user.id,
     });
     if (jobApplication) {
       throw new ConflictException('ALREADY_APPLY_TO_JOB');
@@ -194,7 +200,7 @@ export class JobPostService {
     try {
       const jobApplication = this.jobApplicationRepository.create({
         jobPostId,
-        candidateId: user.candidate.id,
+        candidateId: user.id,
       });
       await this.jobApplicationRepository.save(jobApplication);
     } catch (error) {
