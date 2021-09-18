@@ -15,7 +15,7 @@ export class ExperienceDetail extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'bit', nullable: false })
+  @Column({ type: 'bit', nullable: false, default: false })
   isCurrentjob: boolean;
 
   @Column({ type: 'date', nullable: false })
@@ -33,8 +33,8 @@ export class ExperienceDetail extends BaseEntity {
   @Column({ type: 'varchar', length: 50, nullable: false })
   companyName: string;
 
-  @Column({ type: 'varchar', length: 250, nullable: false })
-  jobAdress: string;
+  /*  @Column({ type: 'varchar', length: 250, nullable: false })
+  jobAdress: string; */
 
   // Timestamps
 
