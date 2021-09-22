@@ -22,6 +22,7 @@ import { CreateUserDto } from '../user/dto';
 import { RoleType, User } from '../user/entities/user.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { FilterCompanyDto } from './dto/filter-company.dto';
 import { Company } from './entities/company.entity';
 
 @Controller('company')
@@ -76,8 +77,9 @@ export class CompanyController {
   }
 
   @Get('')
-  retrieveCompanies() {
-    return this.companyService.retrieveCompanies();
+  @Public()
+  findAll(@Query() filterCompanyDto: FilterCompanyDto) {
+    return this.companyService.findAll(filterCompanyDto);
   }
 
   @Get(':id')
@@ -91,6 +93,7 @@ export class CompanyController {
   }
 
   @Delete(':id')
+  @Public()
   deleteCompany(@Param('id') id: number) {
     return this.companyService.deleteCompany(id);
   }

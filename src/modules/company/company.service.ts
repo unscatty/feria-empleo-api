@@ -1,9 +1,17 @@
-import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  AzureStorageService,
+  UploadedFileMetadata,
+} from '@nestjs/azure-storage';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
-import { isEmpty, isUndefined } from 'lodash';
+import { isUndefined } from 'lodash';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
 import { EntityManager, FindConditions, Repository } from 'typeorm';
@@ -14,6 +22,7 @@ import { UserService } from '../user/user.service';
 import { companyLabels } from './company-labels';
 import { CompanyEmailService } from './company-mail.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { FilterCompanyDto } from './dto/filter-company.dto';
 import { Company } from './entities/company.entity';
 
 @Injectable()
@@ -43,7 +52,10 @@ export class CompanyService {
     return `${folderName}/${new Date().toISOString()}-${filename}`;
   }
 
-  private async uploadImageFile(imageFile: UploadedFileMetadata, email: string) {
+  private async uploadImageFile(
+    imageFile: UploadedFileMetadata,
+    email: string,
+  ) {
     // Modify filename before uploading
     imageFile = {
       ...imageFile,
@@ -59,12 +71,15 @@ export class CompanyService {
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
     imageFile: UploadedFileMetadata,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<Company> {
     let uploadedImage: UploadedImage;
 
     if (imageFile) {
-      uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
+      uploadedImage = await this.uploadImageFile(
+        imageFile,
+        companyToInvite.email,
+      );
     } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
       uploadedImage = await this.uploadedImageRepository.create({
         imageURL: companyToInvite.imageURL,
@@ -85,14 +100,8 @@ export class CompanyService {
     return company;
   }
 
-  public async retrieveCompanies(): Promise<Company[]> {
-    const companyFilter: Company = new Company();
-    companyFilter.isActive = true;
-    const foundCompanies: Company[] = await this.companyRepository.find(companyFilter);
-    if (isEmpty(foundCompanies)) {
-      throw new NotFoundException(companyLabels.errors.companiesNotFound);
-    }
-    return foundCompanies;
+  public async findAll(dto: FilterCompanyDto): Promise<Pagination<Company>> {
+    return paginate<Company>(this.companyRepository, dto);
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
@@ -112,15 +121,11 @@ export class CompanyService {
     const existingCompany = await this.validateInvitationToken(token);
     const newUser = await this.userService.createCompany(userDto);
 
-    const updatedCompany = await this.companyRepository.save({
-      ...existingCompany,
-      user: newUser,
-    });
+    existingCompany.user = newUser;
 
-    return {
-      company: updatedCompany,
-      user: updatedCompany.user,
-    };
+    const updatedCompany = await this.companyRepository.save(existingCompany);
+
+    return updatedCompany;
   }
 
   public async validateInvitationToken(token: string): Promise<Company> {
@@ -164,15 +169,8 @@ export class CompanyService {
     return company;
   }
 
-  public async deleteCompany(id: number): Promise<Company> {
-    const companyToDelete: Company = new Company();
-    companyToDelete.isActive = false;
-    if (isUndefined(id)) {
-      throw new BadRequestException(companyLabels.errors.noIdProvided);
-    }
-    await this.companyRepository.update({ id: id }, companyToDelete);
-    companyToDelete.id = id;
-    return companyToDelete;
+  public async deleteCompany(id: string | number) {
+    return this.companyRepository.delete(id);
   }
 
   private async fillCompanyToCreate(company: CreateCompanyDto): Promise<Company> {

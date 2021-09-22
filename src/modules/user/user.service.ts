@@ -12,7 +12,7 @@ export class UserService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
+    private roleRepository: Repository<Role>
   ) {}
 
   async findAll(filterUsersDto: FilterUsersDto): Promise<User[]> {
@@ -23,10 +23,7 @@ export class UserService {
     return this.usersRepository.find(findQuery);
   }
 
-  async createUser(
-    createUserDto: CreateUserDto,
-    roleType: RoleType,
-  ): Promise<User> {
+  async createUser(createUserDto: CreateUserDto, roleType: RoleType): Promise<User> {
     const userAlreadyExists = await this.usersRepository.findOne({
       email: createUserDto.email,
     });
@@ -41,10 +38,6 @@ export class UserService {
   async deleteUser(id: number): Promise<{ deleted: boolean }> {
     await this.usersRepository.delete({ id });
     return { deleted: true };
-  }
-
-  async createCandidate(createUserDto: CreateUserDto) {
-    return this.createUser(createUserDto, RoleType.CANDIDATE);
   }
 
   async createCompany(createUserDto: CreateUserDto) {

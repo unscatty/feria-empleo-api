@@ -1,5 +1,3 @@
-import { UploadedFileMetadata } from '@nestjs/azure-storage';
-import { Expose } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCompanyDto {

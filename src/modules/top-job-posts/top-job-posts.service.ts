@@ -9,7 +9,7 @@ export class TopJobPostsService {
 
   constructor(
     @InjectRepository(JobPost)
-    private jobPostRepository: Repository<JobPost>,
+    private jobPostRepository: Repository<JobPost>
   ) {
     this.queryBuilder = () => jobPostRepository.createQueryBuilder('jp');
   }
@@ -17,7 +17,7 @@ export class TopJobPostsService {
   async topApplied(limit: number) {
     const groupByCondition = `
     ja.job_post_id, jp.id, jp.is_active, jp.jobTitle, jp.description, jp.requirements, jp.experience,
-    jp.imageUrl, jp.jobType, jp.jobMode, jp.salaryMin,  jp.salaryMax, jp.views, jp.createdAt,
+    jp.jobType, jp.jobMode, jp.salaryMin,  jp.salaryMax, jp.views, jp.createdAt,
     jp.updatedAt, jp.company_id`;
     return this.queryBuilder()
       .innerJoin('job_application', 'ja', 'ja.job_post_id = jp.id')

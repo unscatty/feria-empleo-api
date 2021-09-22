@@ -1,19 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { Public } from '../auth/decorators/public.decorator';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { Allow } from '../auth/decorators/role.decorator';
-import { GetUser } from '../auth/decorators/user.decorator';
-import { RegisterGuard } from '../auth/strategies/b2c-register.strategy';
 import { CreateUserDto, FilterUsersDto } from './dto';
-import { RoleType, User } from './entities/user.entity';
+import { RoleType } from './entities/user.entity';
 import { UserService } from './user.service';
 
 @Controller('users')
@@ -30,17 +18,6 @@ export class UserController {
   @Allow(RoleType.ADMIN)
   createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto, null);
-  }
-
-  @Post('register-candidate')
-  @Public()
-  @UseGuards(RegisterGuard)
-  register(@GetUser() user: User) {
-    const dto = new CreateUserDto();
-    dto.email = user.email;
-    dto.username = '';
-
-    return this.userService.createCandidate(dto);
   }
 
   @Delete(':id')
