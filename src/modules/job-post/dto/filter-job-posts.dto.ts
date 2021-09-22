@@ -39,4 +39,7 @@ export class FilterJobPostsDto extends PaginationDto {
     )})`,
   })
   readonly jobMode: JobPostMode;
+
+  @IsOptional()
+  readonly experience: string;
 }
