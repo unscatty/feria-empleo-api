@@ -92,7 +92,7 @@ export class JobPostService {
   ): Promise<JobPost> {
     // start transaction
     return await getManager().transaction(async (manager) => {
-      const newJobPost = manager.create(JobPost, createJobPostDto);
+      const newJobPost = manager.create(JobPost, createJobPostDto as any);
       newJobPost.company = user.company;
 
       if (image) {
@@ -130,7 +130,7 @@ export class JobPostService {
     }
     return await getManager().transaction(async (manager) => {
       // update current job post
-      manager.merge(JobPost, currentJobPost, dto);
+      manager.merge(JobPost, currentJobPost, dto as any);
 
       if (image) {
         const imageURL = await this.azureStorage.upload(image);
