@@ -39,4 +39,6 @@ export class CreateJobPostDto {
   @ValidateNested({ each: true })
   @Type(() => CreateSkillSetDto)
   readonly skillSets: CreateSkillSetDto[];
+
+  image: Express.Multer.File;
 }
