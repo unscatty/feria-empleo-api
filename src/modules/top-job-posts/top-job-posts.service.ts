@@ -18,7 +18,7 @@ export class TopJobPostsService {
     const groupByCondition = `
     ja.job_post_id, jp.id, jp.is_active, jp.jobTitle, jp.description, jp.requirements, jp.experience,
     jp.jobType, jp.jobMode, jp.salaryMin,  jp.salaryMax, jp.views, jp.createdAt,
-    jp.updatedAt, jp.company_id`;
+    jp.updatedAt, jp.company_id,  jp.image_id, jp.id`;
     return this.queryBuilder()
       .innerJoin('job_application', 'ja', 'ja.job_post_id = jp.id')
       .groupBy(groupByCondition)
@@ -35,9 +35,14 @@ export class TopJobPostsService {
   }
 
   async topViewed(limit: number) {
-    return this.jobPostRepository.find({
-      order: { views: 'DESC' },
-      take: limit,
-    });
+    const groupByCondition = `
+    jp.isActive, jp.jobTitle, jp.description, jp.requirements, jp.experience, jp.jobType, jp.jobMode, jp.salaryMin,
+    jp.salaryMax, jp.views, jp.createdAt, jp.updatedAt, jp.image_id, jp.id, jp.company_id
+    `;
+    return this.queryBuilder()
+      .groupBy(groupByCondition)
+      .orderBy('jp.views', 'DESC')
+      .limit(limit)
+      .getMany();
   }
 }

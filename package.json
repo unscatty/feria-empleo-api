@@ -33,6 +33,7 @@
     "@nestjs/passport": "^7.1.6",
     "@nestjs/platform-express": "^7.6.15",
     "@nestjs/typeorm": "^7.1.5",
+    "@sendgrid/mail": "^7.4.7",
     "applicationinsights": "^2.1.4",
     "chalk": "^4.1.1",
     "class-transformer": "^0.4.0",
