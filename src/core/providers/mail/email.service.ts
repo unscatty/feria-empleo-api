@@ -1,7 +1,7 @@
-import {Email} from "./email";
-import {createTransport} from "nodemailer";
-import * as smtpTransport from "nodemailer-smtp-transport";
 import { Injectable } from "@nestjs/common";
+import * as sgMailer from "@sendgrid/mail";
+
+import {Email} from "./email";
 
 interface MailOptions {
   from: string,
@@ -9,13 +9,13 @@ interface MailOptions {
   subject: string,
   html: string
 }
+
 /**
  * @export
  * @class EmailService
  */
 @Injectable()
 export class EmailService {
-    private transporter: any;
     private mailOptions : MailOptions;
 
     /**
@@ -23,6 +23,7 @@ export class EmailService {
      * @memberof EmailService
      */
     constructor() {
+      sgMailer.setApiKey(process.env.SEND_GRID_API_KEY);
       this.mailOptions = {from: "", to: "",
         subject: "", html: ""};
     }
@@ -32,38 +33,13 @@ export class EmailService {
      * @return {Promise<string>}
      * @memberof EmailService
      */
-    public sendEmail(mail: Email): Promise<string> {
-      const promise: Promise<string> =
-       new Promise((resolve, reject) => {
-         this.createTransporter(mail);
-         this.setMailOptions(mail);
-         this.transporter.sendMail(this.mailOptions,
-             (err: Error | null, value: string ) => {
-               if (err) {
-                 return reject(err);
-               }
-               return resolve(value);
-             });
-       });
-      return promise;
-    }
-
-    /**
-     *
-     *
-     * @private
-     * @param {Email} mail
-     * @memberof EmailService
-     */
-    private createTransporter(mail: Email): void {
-      this.transporter = createTransport(smtpTransport({
-        service: mail.server,
-        secure: true,
-        auth: {
-          user: mail.from,
-          pass: mail.password,
-        },
-      }));
+    public async sendEmail(mail: Email): Promise<void> {
+      try {
+        this.setMailOptions(mail);
+        await sgMailer.send(this.mailOptions);
+      } catch (e) {
+        throw e;
+      }
     }
 
     /**
