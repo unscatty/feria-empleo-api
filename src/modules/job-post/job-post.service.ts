@@ -64,6 +64,16 @@ export class JobPostService {
           search: `%${dto.search}%`,
         });
       }
+      if (dto.salaryMinGte) {
+        query.andWhere('job_post.salaryMin >= :salaryMinGte', {
+          salaryMinGte: dto.salaryMinGte,
+        });
+      }
+      if (dto.salaryMaxLte) {
+        query.andWhere('job_post.salaryMax <= :salaryMaxLte', {
+          salaryMaxLte: dto.salaryMaxLte,
+        });
+      }
       if (typeof dto.isActive !== 'undefined') {
         query.andWhere('job_post.is_active = :isActive', {
           isActive: dto.isActive,
@@ -73,6 +83,26 @@ export class JobPostService {
     }
     query.innerJoinAndSelect('job_post.company', 'company');
     return paginate<JobPost>(query, paginationOptions);
+  }
+
+  async jobPostsGlobalSearch(search: string): Promise<any[]> {
+    const query = this.jobPostRepository.createQueryBuilder('job_post');
+    query.leftJoinAndSelect('job_post.image', 'image');
+    query.leftJoinAndSelect('job_post.company', 'company');
+
+    query.andWhere('(job_post.job_title LIKE :search OR job_post.description LIKE :search)', {
+      search: `%${search}%`,
+    });
+    query.select(['job_post.id', 'job_post.job_title', 'image.imageURL', 'company.name']);
+
+    const res = await query.execute();
+    const response = res.map((j) => ({
+      id: j.job_post_id,
+      jobTitle: j.job_title,
+      image: j.image_image_url,
+      companyName: j.company_name,
+    }));
+    return response;
   }
 
   async findOneJobPost(id: number): Promise<JobPost> {

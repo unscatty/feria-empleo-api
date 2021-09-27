@@ -26,10 +26,13 @@ export class JobPostController {
   constructor(private readonly jobPostService: JobPostService) {}
 
   @Get()
-  findAllJobPosts(
-    @Query() filterJobPostsDto: FilterJobPostsDto,
-  ): Promise<Pagination<JobPost>> {
+  findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
     return this.jobPostService.findAllJobPosts(filterJobPostsDto);
+  }
+
+  @Get('/global-search/:search')
+  jobPostsGlobalSearch(@Param('search') search: string): Promise<any[]> {
+    return this.jobPostService.jobPostsGlobalSearch(search);
   }
 
   @Get(':id')
@@ -68,10 +71,7 @@ export class JobPostController {
   }
 
   @Post('/:id/apply')
-  applyToJobPost(
-    @Param('id') id: number,
-    @GetUser() user: User,
-  ): Promise<{ apply: boolean }> {
+  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
     return this.jobPostService.applyToJobPost(id, user);
   }
 }

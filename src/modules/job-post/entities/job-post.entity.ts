@@ -65,10 +65,10 @@ export class JobPost extends BaseEntity {
   })
   jobMode: JobPostMode;
 
-  @Column()
+  @Column({ nullable: true })
   salaryMin: number;
 
-  @Column()
+  @Column({ nullable: true })
   salaryMax: number;
 
   // For storing view counter

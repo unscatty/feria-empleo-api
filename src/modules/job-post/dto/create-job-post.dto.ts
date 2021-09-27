@@ -1,11 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, Min, ValidateNested } from 'class-validator';
 import { CreateSkillSetDto } from '../../skill-set/dto/create-skill-set.dto';
 
 export class CreateJobPostDto {
@@ -24,13 +18,12 @@ export class CreateJobPostDto {
   @IsOptional()
   readonly experience: string;
 
-  @IsNotEmpty()
-  @IsNumber()
+  @IsOptional()
   @Min(0)
   @Type(() => Number)
   readonly salaryMin: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
   readonly salaryMax: number;
