@@ -15,7 +15,7 @@ import { SkillSetModule } from './modules/skill-set/skill-set.module';
 import { TopJobPostsModule } from './modules/top-job-posts/top-job-posts.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CoreModule } from './core/core.module';
-import { SharedModule } from './shared/share.module';
+import { SharedModule } from './shared/shared.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
