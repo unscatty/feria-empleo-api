@@ -1,5 +1,5 @@
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
@@ -13,6 +13,9 @@ async function bootstrap() {
   app.enableCors();
   app.use(morgan('tiny'));
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector), { strategy: 'exposeAll' })
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({

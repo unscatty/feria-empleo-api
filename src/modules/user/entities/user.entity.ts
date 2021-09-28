@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import {
   BaseEntity,
@@ -56,5 +57,6 @@ export class User extends BaseEntity {
   candidate?: Candidate;
 
   @ManyToOne(() => Role, { eager: true, cascade: true })
+  @Transform(({ value }) => value?.name)
   role: Role;
 }

@@ -1,10 +1,5 @@
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Exclude, Expose } from 'class-transformer';
+import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum RoleType {
   ADMIN = 'ADMIN',
@@ -14,9 +9,11 @@ export enum RoleType {
 
 @Entity()
 export class Role extends BaseEntity {
+  @Exclude({ toPlainOnly: true })
   @PrimaryGeneratedColumn('increment')
   id: number;
 
+  @Expose()
   @Column({
     type: 'simple-enum',
     enum: RoleType,
@@ -26,6 +23,7 @@ export class Role extends BaseEntity {
 
   // Timestamps
 
+  @Exclude({ toPlainOnly: true })
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 }
