@@ -1,12 +1,7 @@
-import {
-  AzureStorageService,
-  UploadedFileMetadata,
-} from '@nestjs/azure-storage';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { StateMachineFactory } from '@depthlabs/nestjs-state-machine';
+import { StateMachine } from '@depthlabs/nestjs-state-machine/dist/state-machine';
+import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
@@ -14,6 +9,7 @@ import { isUndefined } from 'lodash';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { COMPANY_GRAPH_NAME } from 'src/shared/state-machines/company.graph';
 import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
@@ -39,8 +35,14 @@ export class CompanyService {
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
-    private readonly azureStorage: AzureStorageService
+    private readonly azureStorage: AzureStorageService,
+    private readonly stateMachineFactory: StateMachineFactory
   ) {}
+
+  private getStateMachine(company: Company): StateMachine<Company> {
+    // TODO: inject graph name
+    return this.stateMachineFactory.create<Company>(company, COMPANY_GRAPH_NAME);
+  }
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
     const companyToCreate: Company = await this.fillCompanyToCreate(company);
@@ -52,10 +54,7 @@ export class CompanyService {
     return `${folderName}/${new Date().toISOString()}-${filename}`;
   }
 
-  private async uploadImageFile(
-    imageFile: UploadedFileMetadata,
-    email: string,
-  ) {
+  private async uploadImageFile(imageFile: UploadedFileMetadata, email: string) {
     // Modify filename before uploading
     imageFile = {
       ...imageFile,
@@ -71,15 +70,12 @@ export class CompanyService {
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
     imageFile: UploadedFileMetadata,
-    manager: EntityManager,
+    manager: EntityManager
   ): Promise<Company> {
     let uploadedImage: UploadedImage;
 
     if (imageFile) {
-      uploadedImage = await this.uploadImageFile(
-        imageFile,
-        companyToInvite.email,
-      );
+      uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
     } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
       uploadedImage = await this.uploadedImageRepository.create({
         imageURL: companyToInvite.imageURL,

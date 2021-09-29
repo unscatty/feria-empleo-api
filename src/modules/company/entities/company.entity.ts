@@ -12,6 +12,8 @@ import {
 import { User } from '../../user/entities/user.entity';
 import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { StateStore } from '@depthlabs/nestjs-state-machine';
+import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/shared/state-machines/company.graph';
 
 @Entity()
 export class Company extends BaseEntity {
@@ -39,6 +41,12 @@ export class Company extends BaseEntity {
   @Column({ nullable: false, default: true })
   isActive!: boolean;
 
+  // State (StateMachine)
+  // Default state is 'INVITED'
+  @StateStore(COMPANY_GRAPH_NAME)
+  @Column({ nullable: false, default: COMPANY_STATES.INVITED })
+  state: string;
+
   // Timestamps
 
   @CreateDateColumn({ type: 'datetime' })
@@ -50,7 +58,6 @@ export class Company extends BaseEntity {
   // Relationships
 
   // Uploaded image
-
   @OneToOne(() => UploadedImage, {
     eager: true,
     nullable: true,

@@ -4,8 +4,10 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadedImage } from './entitities/uploaded-image.entity';
 import candidateGraph from './state-machines/candidate.graph';
+import companyGraph from './state-machines/company.graph';
 
-const stateMachines: GraphInterface[] = [candidateGraph];
+// Add new graphs here
+const stateMachines: GraphInterface[] = [candidateGraph, companyGraph];
 
 const stateMachineModuleConfig: DynamicModule = StateMachineModule.forRoot(stateMachines);
 

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvConfig } from 'src/config/config.keys';
 import { EmailService } from 'src/core/providers/mail/email.service';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { SharedModule } from 'src/shared/shared.module';
 import { Role } from '../user/entities/role.entity';
 import { User } from '../user/entities/user.entity';
 import { UserModule } from '../user/user.module';
@@ -17,6 +18,7 @@ import { Company } from './entities/company.entity';
   imports: [
     TypeOrmModule.forFeature([User, Company, Role, UploadedImage]),
     UserModule,
+    SharedModule,
     AzureStorageModule.withConfigAsync({
       useFactory: (config: ConfigService) => ({
         sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
@@ -27,11 +29,6 @@ import { Company } from './entities/company.entity';
     }),
   ],
   controllers: [CompanyController],
-  providers: [
-    CompanyService,
-    EmailService,
-    CompanyEmailService,
-    AzureStorageService,
-  ],
+  providers: [CompanyService, EmailService, CompanyEmailService, AzureStorageService],
 })
 export class CompanyModule {}
