@@ -3,7 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
-import { HttpExceptionFilter } from './core/exeptions/httpExceptionFilter';
+import { HttpExceptionFilter } from './core/exceptions/httpExceptionFilter';
 import { CustomLogger } from './library/logger';
 
 async function bootstrap() {
