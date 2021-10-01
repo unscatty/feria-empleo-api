@@ -33,9 +33,9 @@ export class User extends BaseEntity {
   // Relationships
 
   @OneToOne(() => Company, (company) => company.user, {
-    eager: true,
+    // eager: true,
     nullable: true,
-    cascade: true,
+    // cascade: true,
     onDelete: 'CASCADE',
   }) // use bi-directional with company
   company?: Company;
@@ -57,6 +57,6 @@ export class User extends BaseEntity {
   candidate?: Candidate;
 
   @ManyToOne(() => Role, { eager: true, cascade: true })
-  @Transform(({ value }) => value?.name)
+  @Transform(({ value }) => value?.name, { toPlainOnly: true })
   role: Role;
 }

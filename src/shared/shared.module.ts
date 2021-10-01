@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadedImage } from './entitities/uploaded-image.entity';
 import candidateGraph from './state-machines/candidate.graph';
 import companyGraph from './state-machines/company.graph';
+import { StateMachineExceptionInterceptor } from './state-machines/interceptors/state-machine-exception.interceptor';
 
 // Add new graphs here
 const stateMachines: GraphInterface[] = [candidateGraph, companyGraph];
@@ -13,6 +14,7 @@ const stateMachineModuleConfig: DynamicModule = StateMachineModule.forRoot(state
 
 @Module({
   imports: [TypeOrmModule.forFeature([UploadedImage]), stateMachineModuleConfig],
-  exports: [stateMachineModuleConfig],
+  providers: [StateMachineExceptionInterceptor],
+  exports: [stateMachineModuleConfig, StateMachineExceptionInterceptor],
 })
 export class SharedModule {}

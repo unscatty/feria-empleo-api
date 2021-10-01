@@ -13,6 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { StateMachineExceptionInterceptor } from 'src/shared/state-machines/interceptors/state-machine-exception.interceptor';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
 import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
@@ -45,16 +46,13 @@ export class CompanyController {
   inviteCompany(
     @Body() companyToInvite: CreateCompanyDto,
     @UploadedFile() imageFile: UploadedFileMetadata,
-    @TransactionManager() manager: EntityManager,
+    @TransactionManager() manager: EntityManager
   ) {
-    return this.companyService.inviteCompany(
-      companyToInvite,
-      imageFile,
-      manager,
-    );
+    return this.companyService.inviteCompany(companyToInvite, imageFile, manager);
   }
 
   @Post('register')
+  @UseInterceptors(StateMachineExceptionInterceptor)
   @Public()
   @UseGuards(RegisterGuard)
   register(@Body('token') token: string, @GetUser() user: User) {

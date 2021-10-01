@@ -67,6 +67,7 @@ export class Company extends BaseEntity {
   image: UploadedImage;
 
   @OneToOne(() => User, (user) => user.company, {
+    eager: true,
     onDelete: 'CASCADE',
     nullable: true,
   })

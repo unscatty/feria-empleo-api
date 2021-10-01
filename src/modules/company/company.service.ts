@@ -9,7 +9,7 @@ import { isUndefined } from 'lodash';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
-import { COMPANY_GRAPH_NAME } from 'src/shared/state-machines/company.graph';
+import { COMPANY_GRAPH_NAME, COMPANY_TRANSITIONS } from 'src/shared/state-machines/company.graph';
 import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
@@ -118,6 +118,11 @@ export class CompanyService {
     const newUser = await this.userService.createCompany(userDto);
 
     existingCompany.user = newUser;
+
+    const stateMachine = this.getStateMachine(existingCompany);
+
+    // Try to change state
+    await stateMachine.apply(COMPANY_TRANSITIONS.REGISTER);
 
     const updatedCompany = await this.companyRepository.save(existingCompany);
 
