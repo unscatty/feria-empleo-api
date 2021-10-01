@@ -3,7 +3,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
-import { HttpExceptionFilter } from './core/exceptions/httpExceptionFilter';
+import { AnyExceptionFilter } from './core/exceptions-filters/any-exception.filter';
+import { HttpExceptionFilter } from './core/exceptions-filters/http-exception.filter';
 import { CustomLogger } from './library/logger';
 
 async function bootstrap() {
@@ -12,7 +13,7 @@ async function bootstrap() {
   applicationInsigthsConfiguration();
   app.enableCors();
   app.use(morgan('tiny'));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new AnyExceptionFilter(), new HttpExceptionFilter());
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector), { strategy: 'exposeAll' })
   );
