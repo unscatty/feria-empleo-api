@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { EntityManager, FindManyOptions, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { Role, RoleType } from './entities/role.entity';
@@ -23,16 +23,25 @@ export class UserService {
     return this.usersRepository.find(findQuery);
   }
 
-  async createUser(createUserDto: CreateUserDto, roleType: RoleType): Promise<User> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    roleType: RoleType,
+    manager?: EntityManager
+  ): Promise<User> {
     const userAlreadyExists = await this.usersRepository.findOne({
       email: createUserDto.email,
     });
     if (userAlreadyExists) {
-      throw new ConflictException();
+      throw new ConflictException('USER_ALREADY_EXISTS');
     }
     const role = await this.preloadRole(roleType);
     const newUser = this.usersRepository.create({ ...createUserDto, role });
-    return this.usersRepository.save(newUser);
+
+    if (manager) {
+      return manager.save(newUser);
+    } else {
+      return this.usersRepository.save(newUser);
+    }
   }
 
   async deleteUser(id: number): Promise<{ deleted: boolean }> {
@@ -40,8 +49,8 @@ export class UserService {
     return { deleted: true };
   }
 
-  async createCompany(createUserDto: CreateUserDto) {
-    return this.createUser(createUserDto, RoleType.COMPANY);
+  async createCompany(createUserDto: CreateUserDto, manager?: EntityManager) {
+    return this.createUser(createUserDto, RoleType.COMPANY, manager);
   }
 
   /* async update(userId: number, user: UpdateUserDto): Promise<ReadUserDto> {
