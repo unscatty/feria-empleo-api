@@ -7,6 +7,15 @@ export enum RoleType {
   COMPANY = 'COMPANY',
 }
 
+export const roleGroupPrefix = 'role:';
+// To group when serializing
+export const RoleGroup = {
+  ADMIN: roleGroupPrefix + RoleType.ADMIN,
+  CANDIDATE: roleGroupPrefix + RoleType.CANDIDATE,
+  COMPANY: roleGroupPrefix + RoleType.COMPANY,
+  PUBLIC: roleGroupPrefix + 'PUBLIC',
+};
+
 @Entity()
 export class Role extends BaseEntity {
   @Exclude({ toPlainOnly: true })
@@ -20,6 +29,10 @@ export class Role extends BaseEntity {
     default: RoleType.CANDIDATE,
   })
   name: RoleType;
+
+  get group(): string {
+    return roleGroupPrefix + this.name;
+  }
 
   // Timestamps
 

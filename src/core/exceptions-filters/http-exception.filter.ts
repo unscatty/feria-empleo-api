@@ -19,8 +19,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     this.logger.error(exception.message, exception.stack);
-    appInsightsErrorMonitoringService.monitorigError(exception, customProperties);
+    // (Shallow) Duplicate error object because method modifies original object
+    appInsightsErrorMonitoringService.monitorigError(exception, { ...customProperties });
 
-    ctx.getResponse<Response>().status(status).send(customProperties);
+    ctx.getResponse<Response>().status(status).json(customProperties);
   }
 }

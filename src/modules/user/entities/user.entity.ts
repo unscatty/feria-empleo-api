@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
-import { Role } from './role.entity';
+import { Role, RoleType } from './role.entity';
 export { RoleType } from './role.entity';
 @Entity()
 export class User extends BaseEntity {
@@ -21,6 +21,26 @@ export class User extends BaseEntity {
 
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
+
+  private isA(role: RoleType) {
+    return this.role.name === role;
+  }
+
+  isAdmin(): boolean {
+    return this.isA(RoleType.ADMIN);
+  }
+
+  isCompany(): boolean {
+    return this.isA(RoleType.COMPANY);
+  }
+
+  isCandidate(): boolean {
+    return this.isA(RoleType.CANDIDATE);
+  }
+
+  get roleGroup(): string {
+    return this.role.group;
+  }
 
   // Timestamps
 

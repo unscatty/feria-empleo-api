@@ -15,7 +15,7 @@ export class StateMachineExceptionInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((error) => {
         if (error instanceof TransitionCantBeAppliedException) {
-          return throwError(new ForbiddenException('CANNOT_CHANGE_STATE', error.message));
+          return throwError(new ForbiddenException('CANNOT_APPLY_TRANSITION', error.message));
         }
 
         return throwError(error);
