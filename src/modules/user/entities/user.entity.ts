@@ -1,5 +1,5 @@
-import { Transform } from 'class-transformer';
 import { Candidate } from 'src/modules/candidate/models/candidate.entity';
+import { TransformToPlain } from 'src/shared/decorators/class-transform';
 import {
   BaseEntity,
   Column,
@@ -77,6 +77,6 @@ export class User extends BaseEntity {
   candidate?: Candidate;
 
   @ManyToOne(() => Role, { eager: true, cascade: true })
-  @Transform(({ value }) => value?.name, { toPlainOnly: true })
+  @TransformToPlain(({ value }) => value?.name)
   role: Role;
 }

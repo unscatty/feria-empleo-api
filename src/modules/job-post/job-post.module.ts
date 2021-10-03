@@ -9,7 +9,7 @@ import { JobPostTag } from './entities/job-post-tag.entity';
 import { JobPost } from './entities/job-post.entity';
 import { JobPostController } from './job-post.controller';
 import { JobPostService } from './job-post.service';
-import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils/common.utils';
 
 @Module({

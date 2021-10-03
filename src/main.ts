@@ -3,8 +3,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
-import { AnyExceptionFilter } from './core/exceptions-filters/any-exception.filter';
-import { HttpExceptionFilter } from './core/exceptions-filters/http-exception.filter';
+import { AnyExceptionFilter } from './core/exception-filters/any-exception.filter';
+import { HttpExceptionFilter } from './core/exception-filters/http-exception.filter';
 import { RoleSerializerInterceptor } from './core/interceptors/role-serializer.interceptor';
 import { CustomLogger } from './library/logger';
 

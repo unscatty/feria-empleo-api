@@ -11,9 +11,10 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
-import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { StateStore } from '@depthlabs/nestjs-state-machine';
-import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/shared/state-machines/company.graph';
+import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/core/state-machines/company.graph';
+import { ExposeToPlain, TransformToPlain } from 'src/shared/decorators/class-transform';
 
 @Entity()
 export class Company extends BaseEntity {

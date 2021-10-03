@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
-import { UploadedImage } from '../../shared/entitities/uploaded-image.entity';
+import { UploadedImage } from '../../core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils';
 import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { RoleType, User } from '../user/entities/user.entity';
