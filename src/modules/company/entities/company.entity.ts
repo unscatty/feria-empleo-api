@@ -57,7 +57,8 @@ export class Company extends BaseEntity {
   updatedAt: Date;
 
   // Relationships
-
+  @ExposeToPlain({ name: 'imageURL' })
+  @TransformToPlain(({ value }) => value?.imageURL)
   // Uploaded image
   @OneToOne(() => UploadedImage, {
     eager: true,
