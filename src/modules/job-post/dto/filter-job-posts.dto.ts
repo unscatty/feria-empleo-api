@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { PaginationDto } from '../../../shared/dto/pagination.dto';
 import { JobPostMode, JobPostType } from '../entities/job-post.entity';
 
@@ -26,17 +26,23 @@ export class FilterJobPostsDto extends PaginationDto {
 
   @IsOptional()
   @IsEnum(JobPostType, {
-    message: `jobType must be a valid enum value (${Object.values(
-      JobPostType,
-    )})`,
+    message: `jobType must be a valid enum value (${Object.values(JobPostType)})`,
   })
   readonly jobType: JobPostType;
 
   @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  readonly salaryMinGte: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  readonly salaryMaxLte: number;
+
+  @IsOptional()
   @IsEnum(JobPostMode, {
-    message: `jobMode must be a valid enum value (${Object.values(
-      JobPostMode,
-    )})`,
+    message: `jobMode must be a valid enum value (${Object.values(JobPostMode)})`,
   })
   readonly jobMode: JobPostMode;
 
