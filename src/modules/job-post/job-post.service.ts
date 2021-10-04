@@ -296,4 +296,5 @@ export class JobPostService {
     }
     return skillSetsWithSlug;
   }
+
 }

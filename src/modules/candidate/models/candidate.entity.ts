@@ -31,6 +31,9 @@ export class Candidate extends BaseEntity {
   @Column({ type: 'float', nullable: true })
   currentSalary: number;
 
+  @Column({ type: 'varchar', nullable: true})
+  resume: string;
+
   // Timestamps
 
   @CreateDateColumn({ type: 'datetime' })

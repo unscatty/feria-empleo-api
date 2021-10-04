@@ -9,7 +9,12 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
 export class ExperienceDetailDto {
+
+  @IsOptional()
+  id: number;
+  
   @IsOptional()
   @IsBoolean()
   isCurrentjob: boolean;
@@ -79,11 +84,33 @@ export class EducationDetailDto {
   description: string;
 }
 
+export class ContactDetailsDto {
+  @IsNotEmpty({message: "El teléfono no puede estar vacío"})
+  phone: string;
+
+  @IsNotEmpty({ message: "La dirección no puede estar vacía"})
+  address: string;
+
+  @IsOptional()
+  webSite: string;
+
+  @IsOptional()
+  linkedinUrl: string;
+
+  @IsOptional()
+  facebookUrl: string;
+
+  @IsOptional()
+  githubUrl: string;
+
+}
+
 export class CreateCandidateDto {
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  @IsOptional()
   email: string;
 
   @IsOptional()
@@ -99,4 +126,12 @@ export class CreateCandidateDto {
   @IsOptional()
   @IsNumber({}, { each: true })
   skillSets: number[];
+
+  @IsOptional()
+  updateSkillSets: SkillSet[];
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ContactDetailsDto)
+  contactDetails: ContactDetailsDto;
 }
