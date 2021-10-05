@@ -70,6 +70,7 @@ export class Company extends BaseEntity {
 
   @OneToOne(() => User, (user) => user.company, {
     eager: true,
+    cascade: true,
     onDelete: 'CASCADE',
     nullable: true,
   })

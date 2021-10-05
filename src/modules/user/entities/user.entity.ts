@@ -53,9 +53,9 @@ export class User extends BaseEntity {
   // Relationships
 
   @OneToOne(() => Company, (company) => company.user, {
-    // eager: true,
+    eager: false,
     nullable: true,
-    // cascade: true,
+    cascade: false,
     onDelete: 'CASCADE',
   }) // use bi-directional with company
   company?: Company;
@@ -69,9 +69,9 @@ export class User extends BaseEntity {
   contactDetail?: ContactDetail;
 
   @OneToOne(() => Candidate, (candidate) => candidate.user, {
-    eager: true,
+    eager: false,
     nullable: true,
-    cascade: true,
+    cascade: false,
     onDelete: 'CASCADE',
   })
   candidate?: Candidate;

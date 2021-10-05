@@ -1,6 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, FindManyOptions, Repository } from 'typeorm';
+import { Candidate } from '../candidate/models/candidate.entity';
+import { Company } from '../company/entities/company.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { Role, RoleType } from './entities/role.entity';
@@ -12,7 +14,11 @@ export class UserService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>
+    private roleRepository: Repository<Role>,
+    @InjectRepository(Company)
+    private readonly companyRepository: Repository<Company>,
+    @InjectRepository(Candidate)
+    private readonly candidateRepository: Repository<Candidate>
   ) {}
 
   async findAll(filterUsersDto: FilterUsersDto): Promise<User[]> {
@@ -51,6 +57,14 @@ export class UserService {
 
   async createCompany(createUserDto: CreateUserDto, manager?: EntityManager) {
     return this.createUser(createUserDto, RoleType.COMPANY, manager);
+  }
+
+  async getCompany(currentUser: User): Promise<Company> {
+    return this.companyRepository.findOneOrFail({ where: { user: currentUser } });
+  }
+
+  async getCandidate(currentUser: User): Promise<Candidate> {
+    return this.candidateRepository.findOneOrFail({ where: { user: currentUser } });
   }
 
   /* async update(userId: number, user: UpdateUserDto): Promise<ReadUserDto> {
