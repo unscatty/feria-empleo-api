@@ -39,7 +39,7 @@ export class User extends BaseEntity {
   }
 
   get roleGroup(): string {
-    return this.role.group;
+    return this.role?.group;
   }
 
   // Timestamps

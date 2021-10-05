@@ -36,7 +36,7 @@ export class RoleSerializerInterceptor implements NestInterceptor {
   // Add role group to class transformation
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const user = context.switchToHttp().getRequest().user as User;
-    const roleGroup = user?.roleGroup || RoleGroup.PUBLIC;
+    const roleGroup = user && user.role ? user.roleGroup : RoleGroup.PUBLIC;
 
     const contextOptions = this.getContextOptions(context);
     const options: ClassTransformOptions = {
