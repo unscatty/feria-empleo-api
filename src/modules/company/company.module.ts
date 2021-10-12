@@ -27,11 +27,6 @@ import { Company } from './entities/company.entity';
     }),
   ],
   controllers: [CompanyController],
-  providers: [
-    CompanyService,
-    EmailService,
-    CompanyEmailService,
-    AzureStorageService,
-  ],
+  providers: [CompanyService, EmailService, CompanyEmailService, AzureStorageService],
 })
 export class CompanyModule {}

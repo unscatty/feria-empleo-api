@@ -1,13 +1,14 @@
 import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { findIndex, isEmpty, isEqual, isUndefined, reduce } from 'lodash';
+import { findIndex, head, isEmpty, isEqual, isUndefined, reduce } from 'lodash';
 import { EntityManager, getManager, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { ContactDetail } from '../user/entities/contact-detail.entity';
 import { Role, RoleType } from '../user/entities/role.entity';
 import { User } from '../user/entities/user.entity';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
+import { FilterCandidateDto } from './dto/filter-candidate.dto';
 import { CandidateSkillSet } from './models/candidate-skill-set.entity';
 import { Candidate } from './models/candidate.entity';
 import { EducationDetail } from './models/education-detail.entity';
@@ -23,7 +24,7 @@ export class CandidateService {
     @InjectRepository(ContactDetail)
     private contactDetailsRepository: Repository<ContactDetail>,
     private azure: AzureStorageService
-    ) {
+  ) {
     this.queryBuilder = () => this.candidateRepository.createQueryBuilder('candidate');
   }
 
@@ -83,47 +84,77 @@ export class CandidateService {
   async getCandidates(user: User) {
     return this.candidateRepository.find({
       where: {
-        user: user.id
+        user: user.id,
       },
-      relations: ["experienceDetails", "educationDetails", "skillSets"]
+      relations: ['experienceDetails', 'educationDetails', 'skillSets'],
     });
   }
 
+  async getCandidateById(candidateFilter: FilterCandidateDto) {
+    const candidate: Candidate = await this.candidateRepository.findOne(
+      candidateFilter.id,
+      { relations: ['experienceDetails', 'educationDetails', 'skillSets'] }
+    );
+    return candidate;
+  }
+
   async getContactDetails(user: User) {
-    return this.contactDetailsRepository.find({ 
+    return this.contactDetailsRepository.find({
       where: {
-        user: user.id
-      }
-    })
+        user: user.id,
+      },
+    });
+  }
+
+  async getCandidateContactDetails(candidateFilter: FilterCandidateDto) {
+    const candidate: Candidate = await this.candidateRepository.findOne(candidateFilter.id, { relations: ["user"]});
+    const user: User = new User();
+    user.id = candidate.user.id;
+    return this.getContactDetails(user);
   }
 
   async updateResume(resume: UploadedFileMetadata, user: User, manager: EntityManager) {
     if (resume) {
       const url = await this.azure.upload(resume);
-      await manager.update(Candidate, {id: user.candidate.id}, {resume: url});
+      await manager.update(Candidate, { id: user.candidate.id }, { resume: url });
     }
   }
 
-  async updateCandidate(updateCandidateDto: CreateCandidateDto, manager: EntityManager, user: User) {
+  async updateCandidate(
+    updateCandidateDto: CreateCandidateDto,
+    manager: EntityManager,
+    user: User
+  ) {
     await this.updateContactDetails(updateCandidateDto, manager, user);
     await this.updateSkillSets(updateCandidateDto, user, manager);
-    await this.updateExperienceDetails(updateCandidateDto.experienceDetails as ExperienceDetail[], user, manager)
+    await this.updateExperienceDetails(
+      updateCandidateDto.experienceDetails as ExperienceDetail[],
+      user,
+      manager
+    );
   }
 
-  private async updateExperienceDetails(experienceDetails: ExperienceDetail[], user: User, manager: EntityManager) {
+  private async updateExperienceDetails(
+    experienceDetails: ExperienceDetail[],
+    user: User,
+    manager: EntityManager
+  ) {
     const newExperiences = [];
     for (const experience of experienceDetails) {
       if (isUndefined(experience.id)) {
         newExperiences.push(experience);
       } else {
-        await manager.update(ExperienceDetail, {id: experience.id} , 
+        await manager.update(
+          ExperienceDetail,
+          { id: experience.id },
           {
             startDate: experience.startDate,
             endDate: experience.endDate,
             jobTitle: experience.jobTitle,
             jobDescription: experience.jobDescription,
-            companyName: experience.companyName
-          });
+            companyName: experience.companyName,
+          }
+        );
       }
     }
     if (!isEmpty(newExperiences)) {
@@ -131,9 +162,13 @@ export class CandidateService {
     }
   }
 
-  private async createNewExperiences(experiences: ExperienceDetail[], user: User, manager: EntityManager) {
+  private async createNewExperiences(
+    experiences: ExperienceDetail[],
+    user: User,
+    manager: EntityManager
+  ) {
     const newExperiences = [];
-    for(const experience of experiences) {
+    for (const experience of experiences) {
       const newExperience = new ExperienceDetail();
       newExperience.candidate = new Candidate();
       newExperience.startDate = experience.startDate;
@@ -147,25 +182,32 @@ export class CandidateService {
     await manager.save(newExperiences);
   }
 
-  private async updateContactDetails(updateCandidateDto: CreateCandidateDto, manager: EntityManager, user: User)
-  : Promise<void> {
-    const detailsToUpdate = await ContactDetail.findOne({ where: { user: user.id}});
-    await manager.update(ContactDetail, {id : detailsToUpdate.id}, {
-      phone: updateCandidateDto.contactDetails.phone,
-      linkedinUrl: updateCandidateDto.contactDetails.linkedinUrl,
-      facebookUrl: updateCandidateDto.contactDetails.facebookUrl,
-      webSite: updateCandidateDto.contactDetails.webSite,
-      githubUrl: updateCandidateDto.contactDetails.githubUrl,
-      address: updateCandidateDto.contactDetails.address
-    });
+  private async updateContactDetails(
+    updateCandidateDto: CreateCandidateDto,
+    manager: EntityManager,
+    user: User
+  ): Promise<void> {
+    const detailsToUpdate = await ContactDetail.findOne({ where: { user: user.id } });
+    await manager.update(
+      ContactDetail,
+      { id: detailsToUpdate.id },
+      {
+        phone: updateCandidateDto.contactDetails.phone,
+        linkedinUrl: updateCandidateDto.contactDetails.linkedinUrl,
+        facebookUrl: updateCandidateDto.contactDetails.facebookUrl,
+        webSite: updateCandidateDto.contactDetails.webSite,
+        githubUrl: updateCandidateDto.contactDetails.githubUrl,
+        address: updateCandidateDto.contactDetails.address,
+      }
+    );
   }
 
   private async updateSkillSets(candidate: CreateCandidateDto, user: User, manager: EntityManager) {
-    let newSkillSets = this.getNewSkills(candidate.updateSkillSets);
+    const newSkillSets = this.getNewSkills(candidate.updateSkillSets);
     const skillsSaved = await manager.save(SkillSet, newSkillSets);
     const candidatesSkillSets = [];
     await this.deleteSkillsNotSelected(user, candidate.updateSkillSets, manager);
-    for(const skill of skillsSaved) {
+    for (const skill of skillsSaved) {
       const skillCandidate = new CandidateSkillSet();
       skillCandidate.candidateId = user.candidate.id;
       skillCandidate.skillSetId = skill.id;
@@ -181,7 +223,9 @@ export class CandidateService {
       currentSkillsIds.push(skill.skillSetId);
     }
     for (const skill of skills) {
-      const indexFound = findIndex(currentSkillsIds, (id) => { return isEqual(id, skill.id) })
+      const indexFound = findIndex(currentSkillsIds, (id) => {
+        return isEqual(id, skill.id);
+      });
       if (indexFound != -1) {
         currentSkillsIds.splice(indexFound, 1);
       }
