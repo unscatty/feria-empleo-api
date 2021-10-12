@@ -11,10 +11,9 @@ import {
 } from 'class-validator';
 import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
 export class ExperienceDetailDto {
-
   @IsOptional()
   id: number;
-  
+
   @IsOptional()
   @IsBoolean()
   isCurrentjob: boolean;
@@ -85,10 +84,10 @@ export class EducationDetailDto {
 }
 
 export class ContactDetailsDto {
-  @IsNotEmpty({message: "El teléfono no puede estar vacío"})
+  @IsNotEmpty({ message: 'El teléfono no puede estar vacío' })
   phone: string;
 
-  @IsNotEmpty({ message: "La dirección no puede estar vacía"})
+  @IsNotEmpty({ message: 'La dirección no puede estar vacía' })
   address: string;
 
   @IsOptional()
@@ -102,7 +101,6 @@ export class ContactDetailsDto {
 
   @IsOptional()
   githubUrl: string;
-
 }
 
 export class CreateCandidateDto {

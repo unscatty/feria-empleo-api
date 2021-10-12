@@ -8,10 +8,7 @@ import { User } from 'src/modules/user/entities/user.entity';
 const registerStrategyName = 'register';
 
 @Injectable()
-export class B2CRegisterStrategy extends PassportStrategy(
-  BearerStrategy,
-  registerStrategyName,
-) {
+export class B2CRegisterStrategy extends PassportStrategy(BearerStrategy, registerStrategyName) {
   constructor(private config: ConfigService) {
     super({
       identityMetadata: config.get(EnvConfig.B2C_METADATA),
@@ -27,11 +24,7 @@ export class B2CRegisterStrategy extends PassportStrategy(
     });
   }
 
-  async validate(
-    req: Request,
-    token: any,
-    done: VerifyCallback,
-  ): Promise<User> {
+  async validate(req: Request, token: any, done: VerifyCallback): Promise<User> {
     const { emails } = token;
     const email = emails[0];
 

@@ -26,10 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     this.logger.error(exception, JSON.stringify(exception));
-    appInsightsErrorMonitoringService.monitorigError(
-      exception,
-      customProperties,
-    );
+    appInsightsErrorMonitoringService.monitorigError(exception, customProperties);
 
     ctx.getResponse<Response>().status(status).send({
       statusCode: status,

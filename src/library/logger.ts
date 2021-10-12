@@ -68,21 +68,20 @@ export class CustomLogger {
 
     switch (level) {
       case 'info':
-        result = `[${color.blue('INFO')}] ${color.dim.yellow.bold.underline(
-          time,
-        )} [${color.green(this.context)}] ${message}`;
+        result = `[${color.blue('INFO')}] ${color.dim.yellow.bold.underline(time)} [${color.green(
+          this.context
+        )}] ${message}`;
         break;
       case 'error':
-        result = `[${color.red('ERR')}] ${color.dim.yellow.bold.underline(
-          time,
-        )} [${color.green(this.context)}] ${message}`;
-        if (error && process.env.NODE_ENV !== 'production')
-          this.prettyError.render(error, true);
+        result = `[${color.red('ERR')}] ${color.dim.yellow.bold.underline(time)} [${color.green(
+          this.context
+        )}] ${message}`;
+        if (error && process.env.NODE_ENV !== 'production') this.prettyError.render(error, true);
         break;
       case 'warn':
-        result = `[${color.yellow('WARN')}] ${color.dim.yellow.bold.underline(
-          time,
-        )} [${color.green(this.context)}] ${message}`;
+        result = `[${color.yellow('WARN')}] ${color.dim.yellow.bold.underline(time)} [${color.green(
+          this.context
+        )}] ${message}`;
         break;
       default:
         break;

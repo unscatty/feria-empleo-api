@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { getApplyTemplate } from 'src/templates/apply.template';
 import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
 import { UploadedImage } from '../../shared/entitities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils';
@@ -14,7 +15,10 @@ import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { RoleType, User } from '../user/entities/user.entity';
 import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { JobApplication, JobPost, JobPostTag } from './entities';
-
+import { EmailService } from '../../core/providers/mail/email.service';
+import { Company } from '../company/entities/company.entity';
+import { Email } from 'src/core/providers/mail/email';
+import { IEmail } from 'src/shared/interfaces';
 @Injectable()
 export class JobPostService {
   constructor(
@@ -24,7 +28,10 @@ export class JobPostService {
     private jobApplicationRepository: Repository<JobApplication>,
     @InjectRepository(UploadedImage)
     private uploadedImageRepository: Repository<UploadedImage>,
-    private readonly azureStorage: AzureStorageService
+    private readonly azureStorage: AzureStorageService,
+    private mailService: EmailService,
+    @InjectRepository(Company)
+    private companyRepository: Repository<Company>
   ) {}
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -213,26 +220,33 @@ export class JobPostService {
   }
 
   async applyToJobPost(jobPostId: number, user: User) {
-    const jobPostExists = await this.findOneJobPost(jobPostId);
-    if (!jobPostExists.isActive) {
-      throw new NotFoundException('JOB_POST_NOT_FOUND');
-    }
-
-    // find if user already apply to job
-    const jobApplication = this.jobApplicationRepository.findOne({
-      jobPostId,
-      candidateId: user.id,
-    });
-    if (jobApplication) {
-      throw new ConflictException('ALREADY_APPLY_TO_JOB');
-    }
-    // insert the new job application
     try {
-      const jobApplication = this.jobApplicationRepository.create({
+      let jobPostExists: JobPost;
+      let jobApplication: JobApplication;
+      let template: string;
+      let mailOptions: Email;
+
+      jobPostExists = await this.findOneJobPost(jobPostId);
+      if (!jobPostExists.isActive) {
+        throw new NotFoundException('JOB_POST_NOT_FOUND');
+      }
+
+      jobApplication = await this.jobApplicationRepository.findOne({
+        jobPostId,
+        candidateId: user.candidate.id,
+      });
+      if (jobApplication) {
+        throw new ConflictException('ALREADY_APPLY_TO_JOB');
+      }
+      // insert the new job application
+      jobApplication = this.jobApplicationRepository.create({
         jobPostId,
         candidateId: user.id,
       });
       await this.jobApplicationRepository.save(jobApplication);
+      template = getApplyTemplate(user, jobPostExists.jobTitle);
+      mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
+      await this.mailService.sendEmail(mailOptions);
     } catch (error) {
       throw new BadRequestException('FAILED_TO_APPLY_JOB');
     }
@@ -297,4 +311,15 @@ export class JobPostService {
     return skillSetsWithSlug;
   }
 
+  private createEmailOptions(company: Company, template: string, jobPost: JobPost): Email {
+    const mailOption: IEmail = {
+      header: `Aplicación a la vacante ${jobPost.jobTitle}`,
+      from: process.env.EMAIL_FROM,
+      password: process.env.EMAIL_PASSWORD,
+      server: process.env.EMAIL_SERVER,
+      to: company.activeEmail,
+      message: template,
+    };
+    return new Email(mailOption);
+  }
 }

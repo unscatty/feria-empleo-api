@@ -42,7 +42,7 @@ export class JobPostController {
   }
 
   @Post()
-  @Allow(RoleType.COMPANY)
+  // @Allow(RoleType.COMPANY)
   @UseInterceptors(FileInterceptor('image'))
   createJobPost(
     @Body() createJobPostDto: CreateJobPostDto,

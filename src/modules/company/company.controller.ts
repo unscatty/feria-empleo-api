@@ -45,13 +45,9 @@ export class CompanyController {
   inviteCompany(
     @Body() companyToInvite: CreateCompanyDto,
     @UploadedFile() imageFile: UploadedFileMetadata,
-    @TransactionManager() manager: EntityManager,
+    @TransactionManager() manager: EntityManager
   ) {
-    return this.companyService.inviteCompany(
-      companyToInvite,
-      imageFile,
-      manager,
-    );
+    return this.companyService.inviteCompany(companyToInvite, imageFile, manager);
   }
 
   @Post('register')

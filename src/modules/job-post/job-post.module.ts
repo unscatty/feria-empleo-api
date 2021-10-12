@@ -11,15 +11,12 @@ import { JobPostController } from './job-post.controller';
 import { JobPostService } from './job-post.service';
 import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils/common.utils';
+import { Company } from '../company/entities/company.entity';
+import { EmailService } from 'src/core/providers/mail/email.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      JobPost,
-      JobApplication,
-      JobPostTag,
-      UploadedImage,
-    ]),
+    TypeOrmModule.forFeature([JobPost, JobApplication, JobPostTag, UploadedImage, Company]),
     AzureStorageModule.withConfigAsync({
       useFactory: (config: ConfigService) => ({
         sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
@@ -43,6 +40,6 @@ import { getSlug } from '../../shared/utils/common.utils';
     }),
   ],
   controllers: [JobPostController],
-  providers: [JobPostService],
+  providers: [JobPostService, EmailService],
 })
 export class JobPostModule {}

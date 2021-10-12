@@ -15,7 +15,7 @@ export class CandidateSkillSet extends BaseEntity {
   @PrimaryColumn()
   skillSetId: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   level: number;
 
   // Timestamps

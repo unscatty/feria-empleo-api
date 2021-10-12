@@ -7,7 +7,7 @@ import { SkillSet } from './entities/skill-set.entity';
 export class SkillSetService {
   constructor(
     @InjectRepository(SkillSet)
-    private skillSetRepository: Repository<SkillSet>,
+    private skillSetRepository: Repository<SkillSet>
   ) {}
 
   findAllSkillSets() {

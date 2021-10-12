@@ -8,7 +8,7 @@ export class ComposeGuard implements CanActivate {
   constructor(
     private b2cAuthGuard: B2CAuthGuard,
     private roleGuard: RoleGuard,
-    private reflector: Reflector,
+    private reflector: Reflector
   ) {}
 
   // guard to call B2CAuthGuard and roleGuard at same time
@@ -18,8 +18,7 @@ export class ComposeGuard implements CanActivate {
     if (publicRoute) return true;
 
     return (
-      (await this.b2cAuthGuard.canActivate(context)) &&
-      (await this.roleGuard.canActivate(context))
+      (await this.b2cAuthGuard.canActivate(context)) && (await this.roleGuard.canActivate(context))
     );
   }
 }

@@ -16,10 +16,7 @@ import invitationTemplate from 'src/templates/invitation-template';
 @Injectable()
 export class CompanyEmailService {
   private logger = new CustomLogger('CompanyEmailService');
-  constructor(
-    private mailService: EmailService,
-    private config: ConfigService,
-  ) {}
+  constructor(private mailService: EmailService, private config: ConfigService) {}
 
   public async sendInvitation(companyToInvite: CreateCompanyDto) {
     try {
@@ -34,10 +31,7 @@ export class CompanyEmailService {
     }
   }
 
-  private setInvitationTemplate(
-    companyToInvite: CreateCompanyDto,
-    url: string,
-  ) {
+  private setInvitationTemplate(companyToInvite: CreateCompanyDto, url: string) {
     let template = invitationTemplate;
     template = template.replace('$name', companyToInvite.name);
     template = template.replace('$url', url);
@@ -46,24 +40,13 @@ export class CompanyEmailService {
 
   private buildUrl(companyToInvite: CreateCompanyDto): string {
     // const token = JWT.sign(companyToInvite.email);
-    const token = sign(
-      { email: companyToInvite.email },
-      this.config.get(EnvConfig.JWT_SECRET),
-      {
-        expiresIn: '7 days',
-      },
-    );
-    return (
-      this.config.get(EnvConfig.CLIENT_URL) +
-      '/empresas/verificar-invitacion?token=' +
-      token
-    );
+    const token = sign({ email: companyToInvite.email }, this.config.get(EnvConfig.JWT_SECRET), {
+      expiresIn: '7 days',
+    });
+    return this.config.get(EnvConfig.CLIENT_URL) + '/empresas/verificar-invitacion?token=' + token;
   }
 
-  private createEmailOptions(
-    companyToInvite: CreateCompanyDto,
-    template: string,
-  ): Email {
+  private createEmailOptions(companyToInvite: CreateCompanyDto, template: string): Email {
     const mailOption: IEmail = {
       header: companyLabels.mailHeader,
       from: process.env.EMAIL_FROM,

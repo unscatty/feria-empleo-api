@@ -1,12 +1,5 @@
-import {
-  AzureStorageService,
-  UploadedFileMetadata,
-} from '@nestjs/azure-storage';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { verify } from 'jsonwebtoken';
@@ -52,10 +45,7 @@ export class CompanyService {
     return `${folderName}/${new Date().toISOString()}-${filename}`;
   }
 
-  private async uploadImageFile(
-    imageFile: UploadedFileMetadata,
-    email: string,
-  ) {
+  private async uploadImageFile(imageFile: UploadedFileMetadata, email: string) {
     // Modify filename before uploading
     imageFile = {
       ...imageFile,
@@ -71,15 +61,12 @@ export class CompanyService {
   public async inviteCompany(
     companyToInvite: CreateCompanyDto,
     imageFile: UploadedFileMetadata,
-    manager: EntityManager,
+    manager: EntityManager
   ): Promise<Company> {
     let uploadedImage: UploadedImage;
 
     if (imageFile) {
-      uploadedImage = await this.uploadImageFile(
-        imageFile,
-        companyToInvite.email,
-      );
+      uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
     } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
       uploadedImage = await this.uploadedImageRepository.create({
         imageURL: companyToInvite.imageURL,
