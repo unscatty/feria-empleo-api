@@ -8,17 +8,20 @@ import {
   Post,
   Put,
   Query,
+  SerializeOptions,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { StateMachineExceptionInterceptor } from 'src/core/state-machines/interceptors/state-machine-exception.interceptor';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
 import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
 import { GetUser } from '../auth/decorators/user.decorator';
 import { RegisterGuard } from '../auth/strategies/b2c-register.strategy';
 import { CreateUserDto } from '../user/dto';
+import { RoleGroup } from '../user/entities/role.entity';
 import { RoleType, User } from '../user/entities/user.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -51,8 +54,10 @@ export class CompanyController {
   }
 
   @Post('register')
-  @Public()
+  @SerializeOptions({ groups: [RoleGroup.COMPANY] })
+  @UseInterceptors(StateMachineExceptionInterceptor)
   @UseGuards(RegisterGuard)
+  @Public()
   register(@Body('token') token: string, @GetUser() user: User) {
     const dto = new CreateUserDto();
     dto.email = user.email;

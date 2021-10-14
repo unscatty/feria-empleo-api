@@ -1,3 +1,5 @@
+import { StateMachineFactory } from '@depthlabs/nestjs-state-machine';
+import { StateMachine } from '@depthlabs/nestjs-state-machine/dist/state-machine';
 import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -6,7 +8,8 @@ import { verify } from 'jsonwebtoken';
 import { isUndefined } from 'lodash';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
-import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
+import { COMPANY_GRAPH_NAME, COMPANY_TRANSITIONS } from 'src/core/state-machines/company.graph';
 import { EntityManager, FindConditions, Repository } from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
@@ -32,8 +35,14 @@ export class CompanyService {
     private companyEmailService: CompanyEmailService,
     private config: ConfigService,
     private userService: UserService,
-    private readonly azureStorage: AzureStorageService
+    private readonly azureStorage: AzureStorageService,
+    private readonly stateMachineFactory: StateMachineFactory
   ) {}
+
+  private getStateMachine(company: Company): StateMachine<Company> {
+    // TODO: inject graph name
+    return this.stateMachineFactory.create<Company>(company, COMPANY_GRAPH_NAME);
+  }
 
   public async createCompany(company: CreateCompanyDto): Promise<Company> {
     const companyToCreate: Company = await this.fillCompanyToCreate(company);
@@ -109,6 +118,11 @@ export class CompanyService {
     const newUser = await this.userService.createCompany(userDto);
 
     existingCompany.user = newUser;
+
+    const stateMachine = this.getStateMachine(existingCompany);
+
+    // Try to change state
+    await stateMachine.apply(COMPANY_TRANSITIONS.REGISTER);
 
     const updatedCompany = await this.companyRepository.save(existingCompany);
 

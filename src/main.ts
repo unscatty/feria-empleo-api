@@ -1,9 +1,11 @@
 import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 import { applicationInsigthsConfiguration } from './config/applicationInsights.config';
-import { HttpExceptionFilter } from './core/exeptions/httpExceptionFilter';
+import { AnyExceptionFilter } from './core/exception-filters/any-exception.filter';
+import { HttpExceptionFilter } from './core/exception-filters/http-exception.filter';
+import { RoleSerializerInterceptor } from './core/interceptors/role-serializer.interceptor';
 import { CustomLogger } from './library/logger';
 
 async function bootstrap() {
@@ -12,7 +14,10 @@ async function bootstrap() {
   applicationInsigthsConfiguration();
   app.enableCors();
   app.use(morgan('tiny'));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new AnyExceptionFilter(), new HttpExceptionFilter());
+  app.useGlobalInterceptors(
+    new RoleSerializerInterceptor(app.get(Reflector), { strategy: 'exposeAll' })
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -11,7 +11,10 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
-import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
+import { StateStore } from '@depthlabs/nestjs-state-machine';
+import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/core/state-machines/company.graph';
+import { ExposeToPlain, TransformToPlain } from 'src/shared/decorators/class-transform';
 
 @Entity()
 export class Company extends BaseEntity {
@@ -39,6 +42,12 @@ export class Company extends BaseEntity {
   @Column({ nullable: false, default: true })
   isActive!: boolean;
 
+  // State (StateMachine)
+  // Default state is 'INVITED'
+  @StateStore(COMPANY_GRAPH_NAME)
+  @Column({ nullable: false, default: COMPANY_STATES.INVITED })
+  state: string;
+
   // Timestamps
 
   @CreateDateColumn({ type: 'datetime' })
@@ -48,9 +57,9 @@ export class Company extends BaseEntity {
   updatedAt: Date;
 
   // Relationships
-
+  @ExposeToPlain({ name: 'imageURL' })
+  @TransformToPlain(({ value }) => value?.imageURL)
   // Uploaded image
-
   @OneToOne(() => UploadedImage, {
     eager: true,
     nullable: true,
@@ -60,6 +69,8 @@ export class Company extends BaseEntity {
   image: UploadedImage;
 
   @OneToOne(() => User, (user) => user.company, {
+    eager: true,
+    cascade: true,
     onDelete: 'CASCADE',
     nullable: true,
   })

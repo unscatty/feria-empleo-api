@@ -99,7 +99,7 @@ export class CandidateService {
   }
 
   async getContactDetails(user: User) {
-    return this.contactDetailsRepository.find({
+    return await this.contactDetailsRepository.find({
       where: {
         user: user.id,
       },
@@ -107,7 +107,8 @@ export class CandidateService {
   }
 
   async getCandidateContactDetails(candidateFilter: FilterCandidateDto) {
-    const candidate: Candidate = await this.candidateRepository.findOne(candidateFilter.id, { relations: ["user"]});
+    console.log(candidateFilter);
+    const candidate: Candidate = await this.candidateRepository.findOne(candidateFilter.id);
     const user: User = new User();
     user.id = candidate.user.id;
     return this.getContactDetails(user);
