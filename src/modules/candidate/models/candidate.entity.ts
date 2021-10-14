@@ -45,6 +45,8 @@ export class Candidate extends BaseEntity {
   // Relationships
 
   @OneToOne(() => User, {
+    eager: true,
+    cascade: true,
     nullable: false,
     onDelete: 'CASCADE',
   })

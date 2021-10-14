@@ -32,16 +32,6 @@ export class CandidateController {
     return this.candidateService.createCandidate(createCandidateDto);
   }
 
-  @Get('')
-  getCandidates(@GetUser() user: User) {
-    return this.candidateService.getCandidates(user);
-  }
-
-  @Get(':id')
-  getCandidateById(@Param() filterCanidate: FilterCandidateDto) {
-    return this.candidateService.getCandidateById(filterCanidate);
-  }
-
   @Get('contact')
   getContactDetails(@GetUser() user: User) {
     return this.candidateService.getContactDetails(user);
@@ -50,6 +40,16 @@ export class CandidateController {
   @Get('contact/:id')
   getCandidateContactDetails(@Param() filterCanidate: FilterCandidateDto) {
     return this.candidateService.getCandidateContactDetails(filterCanidate);
+  }
+
+  @Get('')
+  getCandidates(@GetUser() user: User) {
+    return this.candidateService.getCandidates(user);
+  }
+
+  @Get(':id')
+  getCandidateById(@Param() filterCanidate: FilterCandidateDto) {
+    return this.candidateService.getCandidateById(filterCanidate);
   }
 
   @Put('update')

@@ -1,6 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { EntityManager, FindManyOptions, Repository } from 'typeorm';
+import { Candidate } from '../candidate/models/candidate.entity';
+import { Company } from '../company/entities/company.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { Role, RoleType } from './entities/role.entity';
@@ -12,7 +14,11 @@ export class UserService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>
+    private roleRepository: Repository<Role>,
+    @InjectRepository(Company)
+    private readonly companyRepository: Repository<Company>,
+    @InjectRepository(Candidate)
+    private readonly candidateRepository: Repository<Candidate>
   ) {}
 
   async findAll(filterUsersDto: FilterUsersDto): Promise<User[]> {
@@ -23,16 +29,25 @@ export class UserService {
     return this.usersRepository.find(findQuery);
   }
 
-  async createUser(createUserDto: CreateUserDto, roleType: RoleType): Promise<User> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    roleType: RoleType,
+    manager?: EntityManager
+  ): Promise<User> {
     const userAlreadyExists = await this.usersRepository.findOne({
       email: createUserDto.email,
     });
     if (userAlreadyExists) {
-      throw new ConflictException();
+      throw new ConflictException('USER_ALREADY_EXISTS');
     }
     const role = await this.preloadRole(roleType);
     const newUser = this.usersRepository.create({ ...createUserDto, role });
-    return this.usersRepository.save(newUser);
+
+    if (manager) {
+      return manager.save(newUser);
+    } else {
+      return this.usersRepository.save(newUser);
+    }
   }
 
   async deleteUser(id: number): Promise<{ deleted: boolean }> {
@@ -40,8 +55,16 @@ export class UserService {
     return { deleted: true };
   }
 
-  async createCompany(createUserDto: CreateUserDto) {
-    return this.createUser(createUserDto, RoleType.COMPANY);
+  async createCompany(createUserDto: CreateUserDto, manager?: EntityManager) {
+    return this.createUser(createUserDto, RoleType.COMPANY, manager);
+  }
+
+  async getCompany(currentUser: User): Promise<Company> {
+    return this.companyRepository.findOneOrFail({ where: { user: currentUser } });
+  }
+
+  async getCandidate(currentUser: User): Promise<Candidate> {
+    return this.candidateRepository.findOneOrFail({ where: { user: currentUser } });
   }
 
   /* async update(userId: number, user: UpdateUserDto): Promise<ReadUserDto> {
