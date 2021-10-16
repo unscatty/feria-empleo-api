@@ -14,7 +14,7 @@ export class B2CStrategy extends PassportStrategy(BearerStrategy) {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private config: ConfigService,
+    private config: ConfigService
   ) {
     super({
       identityMetadata: config.get(EnvConfig.B2C_METADATA),
@@ -30,11 +30,7 @@ export class B2CStrategy extends PassportStrategy(BearerStrategy) {
     });
   }
 
-  async validate(
-    req: Request,
-    token: any,
-    done: VerifyCallback,
-  ): Promise<User> {
+  async validate(req: Request, token: any, done: VerifyCallback): Promise<User> {
     const email = token.emails[0];
     const user = await this.usersRepository.findOne({ email });
     if (!user) {

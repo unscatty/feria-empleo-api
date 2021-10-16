@@ -1,4 +1,5 @@
 import { Candidate } from 'src/modules/candidate/models/candidate.entity';
+import { TransformToPlain } from 'src/shared/decorators/class-transform';
 import {
   BaseEntity,
   Column,
@@ -11,7 +12,7 @@ import {
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
-import { Role } from './role.entity';
+import { Role, RoleType } from './role.entity';
 export { RoleType } from './role.entity';
 @Entity()
 export class User extends BaseEntity {
@@ -20,6 +21,26 @@ export class User extends BaseEntity {
 
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
+
+  private isA(role: RoleType) {
+    return this.role.name === role;
+  }
+
+  isAdmin(): boolean {
+    return this.isA(RoleType.ADMIN);
+  }
+
+  isCompany(): boolean {
+    return this.isA(RoleType.COMPANY);
+  }
+
+  isCandidate(): boolean {
+    return this.isA(RoleType.CANDIDATE);
+  }
+
+  get roleGroup(): string {
+    return this.role?.group;
+  }
 
   // Timestamps
 
@@ -32,9 +53,9 @@ export class User extends BaseEntity {
   // Relationships
 
   @OneToOne(() => Company, (company) => company.user, {
-    eager: true,
+    eager: false,
     nullable: true,
-    cascade: true,
+    cascade: false,
     onDelete: 'CASCADE',
   }) // use bi-directional with company
   company?: Company;
@@ -48,13 +69,14 @@ export class User extends BaseEntity {
   contactDetail?: ContactDetail;
 
   @OneToOne(() => Candidate, (candidate) => candidate.user, {
-    eager: true,
+    eager: false,
     nullable: true,
-    cascade: true,
+    cascade: false,
     onDelete: 'CASCADE',
   })
   candidate?: Candidate;
 
   @ManyToOne(() => Role, { eager: true, cascade: true })
+  @TransformToPlain(({ value }) => value?.name)
   role: Role;
 }

@@ -1,7 +1,7 @@
 import { Candidate } from 'src/modules/candidate/models/candidate.entity';
 import { Company } from 'src/modules/company/entities/company.entity';
 import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
-import { UploadedImage } from 'src/shared/entitities/uploaded-image.entity';
+import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import {
   BaseEntity,
   Column,
@@ -15,6 +15,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TransformToPlain } from 'src/shared/decorators/class-transform';
 
 export enum JobPostType {
   FULL_TIME = 'full_time',
@@ -41,7 +42,7 @@ export class JobPost extends BaseEntity {
   @Column({ length: 500 })
   description: string;
 
-  @Column({ length: 2000 })
+  @Column({ length: 3000 })
   requirements: string;
 
   @Column({ nullable: true })
@@ -52,6 +53,7 @@ export class JobPost extends BaseEntity {
     nullable: true,
     cascade: true,
   })
+  @TransformToPlain(({ value }) => value?.imageURL)
   @JoinColumn()
   image: UploadedImage;
 

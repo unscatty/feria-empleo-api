@@ -11,15 +11,18 @@ import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from 'src/config/config.keys';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Candidate, User, ContactDetail]), UserModule,
-  AzureStorageModule.withConfigAsync({
-    useFactory: (config: ConfigService) => ({
-      sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
-      accountName: config.get(EnvConfig.AZURE_STORAGE_ACCOUNT),
-      containerName: config.get(EnvConfig.AZURE_STORAGE_CONTAINER_NAME),
+  imports: [
+    TypeOrmModule.forFeature([Candidate, User, ContactDetail]),
+    UserModule,
+    AzureStorageModule.withConfigAsync({
+      useFactory: (config: ConfigService) => ({
+        sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
+        accountName: config.get(EnvConfig.AZURE_STORAGE_ACCOUNT),
+        containerName: config.get(EnvConfig.AZURE_STORAGE_CONTAINER_NAME),
+      }),
+      inject: [ConfigService],
     }),
-    inject: [ConfigService],
-  })],
+  ],
   controllers: [CandidateController],
   providers: [CandidateService],
 })

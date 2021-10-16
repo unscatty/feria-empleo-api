@@ -26,9 +26,7 @@ class AppInsightsService {
           .setUseDiskRetryCaching(true)
           .setSendLiveMetrics(true)
           .setUseDiskRetryCaching(true)
-          .setDistributedTracingMode(
-            this.appInsights.DistributedTracingModes.AI_AND_W3C,
-          );
+          .setDistributedTracingMode(this.appInsights.DistributedTracingModes.AI_AND_W3C);
         this.appInsightsRoleConfig();
         this.appInsights.start();
       }
@@ -57,7 +55,7 @@ class AppInsightsService {
   public logEvent(
     name: string,
     properties?: { [key: string]: string },
-    measurements?: { [key: string]: number },
+    measurements?: { [key: string]: number }
   ): void {
     try {
       if (
@@ -86,7 +84,7 @@ class AppInsightsService {
     exception: Error,
     properties?: { [key: string]: any },
     severity?: number,
-    time?: Date,
+    time?: Date
   ): void {
     try {
       if (
@@ -111,11 +109,7 @@ class AppInsightsService {
    * @param {number} value - Custom metric value.
    * @param {dictionary} properties - Additional data used to filter custom metrics.
    */
-  public logMetric(
-    name: string,
-    value?: number,
-    properties?: { [key: string]: string },
-  ): void {
+  public logMetric(name: string, value?: number, properties?: { [key: string]: string }): void {
     try {
       if (
         isEqual(process.env.NODE_ENV, this.nodeEnv) &&
@@ -128,9 +122,7 @@ class AppInsightsService {
         });
       }
     } catch (error) {
-      throw new Error(
-        `Application Insights metric cannot be tracked. ${error}`,
-      );
+      throw new Error(`Application Insights metric cannot be tracked. ${error}`);
     }
   }
 }

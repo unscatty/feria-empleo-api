@@ -24,6 +24,7 @@
     "migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert --config orm.config.json"
   },
   "dependencies": {
+    "@depthlabs/nestjs-state-machine": "^0.0.2",
     "@nestjs-modules/mailer": "^1.6.0",
     "@nestjs/azure-storage": "^3.0.0",
     "@nestjs/common": "^7.6.15",

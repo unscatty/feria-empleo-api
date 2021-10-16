@@ -48,5 +48,5 @@ export class ContactDetail extends BaseEntity {
     nullable: false,
   })
   @JoinColumn()
-  user: User;
+  user: User | number;
 }
