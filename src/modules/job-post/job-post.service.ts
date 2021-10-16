@@ -19,6 +19,7 @@ import { EmailService } from '../../core/providers/mail/email.service';
 import { Company } from '../company/entities/company.entity';
 import { Email } from 'src/core/providers/mail/email';
 import { IEmail } from 'src/shared/interfaces';
+import { Candidate } from '../candidate/models/candidate.entity';
 @Injectable()
 export class JobPostService {
   constructor(
@@ -29,9 +30,7 @@ export class JobPostService {
     @InjectRepository(UploadedImage)
     private uploadedImageRepository: Repository<UploadedImage>,
     private readonly azureStorage: AzureStorageService,
-    private mailService: EmailService,
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>
+    private mailService: EmailService
   ) {}
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -130,9 +129,16 @@ export class JobPostService {
     // start transaction
     return await getManager().transaction(async (manager) => {
       const newJobPost = manager.create(JobPost, createJobPostDto as any);
+      if (!user.company) {
+        user.company = await manager.findOne(Company, { where: { user: user.id } });
+      }
       newJobPost.company = user.company;
 
       if (image) {
+        const subFolder = getSlug(user.company.name) + '/';
+        image.originalname = `job-posts/${subFolder}${new Date().toISOString()}-${
+          image.originalname
+        }`;
         const imageURL = await this.azureStorage.upload(image);
         const newImage = this.uploadedImageRepository.create({ imageURL });
         newJobPost.image = newImage;
@@ -220,37 +226,38 @@ export class JobPostService {
   }
 
   async applyToJobPost(jobPostId: number, user: User) {
-    try {
-      let jobPostExists: JobPost;
-      let jobApplication: JobApplication;
-      let template: string;
-      let mailOptions: Email;
-
-      jobPostExists = await this.findOneJobPost(jobPostId);
-      if (!jobPostExists.isActive) {
-        throw new NotFoundException('JOB_POST_NOT_FOUND');
-      }
-
-      jobApplication = await this.jobApplicationRepository.findOne({
-        jobPostId,
-        candidateId: user.candidate.id,
-      });
-      if (jobApplication) {
-        throw new ConflictException('ALREADY_APPLY_TO_JOB');
-      }
-      // insert the new job application
-      jobApplication = this.jobApplicationRepository.create({
-        jobPostId,
-        candidateId: user.id,
-      });
-      await this.jobApplicationRepository.save(jobApplication);
-      template = getApplyTemplate(user, jobPostExists.jobTitle);
-      mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
-      await this.mailService.sendEmail(mailOptions);
-    } catch (error) {
-      throw new BadRequestException('FAILED_TO_APPLY_JOB');
+    let jobApplication: JobApplication;
+    const jobPostExists = await this.findOneJobPost(jobPostId);
+    if (!jobPostExists.isActive) {
+      throw new NotFoundException('JOB_POST_NOT_FOUND');
     }
-    return { apply: true };
+    return await getManager().transaction(async (manager) => {
+      try {
+        if (!user.candidate) {
+          user.candidate = await manager.findOne(Candidate, { where: { user: user.id } });
+        }
+
+        jobApplication = await manager.findOne(JobApplication, {
+          jobPostId,
+          candidateId: user.candidate.id,
+        });
+        if (jobApplication) {
+          throw new ConflictException('ALREADY_APPLY_TO_JOB');
+        }
+        // insert the new job application
+        jobApplication = await manager.create(JobApplication, {
+          jobPostId,
+          candidateId: user.id,
+        });
+        await manager.save(jobApplication);
+        const template = getApplyTemplate(user, jobPostExists.jobTitle);
+        const mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
+        await this.mailService.sendEmail(mailOptions);
+      } catch (error) {
+        throw new BadRequestException('FAILED_TO_APPLY_JOB');
+      }
+      return { apply: true };
+    });
   }
 
   async handleJobPostTags(

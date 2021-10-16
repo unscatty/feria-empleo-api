@@ -29,7 +29,7 @@ import { EmailService } from 'src/core/providers/mail/email.service';
     MulterModule.register({
       fileFilter: (req, file, cb) => {
         let subFolder = '';
-        if (req.user && req.user.company.name) {
+        if (req.user && req.user.company?.name) {
           subFolder = getSlug(req.user.company.name) + '/';
         }
         file.originalname = `job-posts/${subFolder}${new Date().toISOString()}-${
