@@ -74,4 +74,9 @@ export class JobPostController {
   applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
     return this.jobPostService.applyToJobPost(id, user);
   }
+
+  @Get('/:id/candidates-applied')
+  getAppliedCandidatesToJob(@Param('id') id: number) {
+    return this.jobPostService.getAppliedCandidatesToJob(id);
+  }
 }

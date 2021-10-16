@@ -297,4 +297,31 @@ export class JobPostService {
     return skillSetsWithSlug;
   }
 
+  async getAppliedCandidatesToJob(jobPostId: number) {
+    /*   const res = await this.jobPostRepository
+      .createQueryBuilder('job')
+      .innerJoinAndSelect('job.candidates', 'candidate')
+      .innerJoinAndSelect('job.candidates', 'candidate')
+
+
+      .execute();
+    console.log(res); */
+
+    const query = this.jobApplicationRepository.createQueryBuilder('jobA');
+
+    query.innerJoinAndSelect('candidate', 'candidate');
+    query.leftJoinAndSelect('candidate.user', 'user');
+    //    query.leftJoinAndSelect('candidate.experienceDetails', 'experienceDetails');
+
+    query.where('jobA.jobPostId = :jobPostId', { jobPostId });
+    const res = await query.execute();
+    console.log(res);
+
+    return res.map((r) => ({
+      id: r.user_id,
+      candidateId: r.candidate_id,
+      email: r.user_email,
+      name: r.candidate_name,
+    }));
+  }
 }
