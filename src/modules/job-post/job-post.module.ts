@@ -13,6 +13,7 @@ import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils/common.utils';
 import { Company } from '../company/entities/company.entity';
 import { EmailService } from 'src/core/providers/mail/email.service';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { EmailService } from 'src/core/providers/mail/email.service';
         cb(null, true);
       },
     }),
+    UserModule,
   ],
   controllers: [JobPostController],
   providers: [JobPostService, EmailService],

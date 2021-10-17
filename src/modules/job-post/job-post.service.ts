@@ -225,37 +225,30 @@ export class JobPostService {
     return this.jobPostRepository.save(currentJobPost);
   }
 
-  async applyToJobPost(jobPostId: number, user: User) {
+  async applyToJobPost(jobPostId: number, candidate: Candidate) {
     let jobApplication: JobApplication;
     const jobPostExists = await this.findOneJobPost(jobPostId);
     if (!jobPostExists.isActive) {
       throw new NotFoundException('JOB_POST_NOT_FOUND');
     }
     return await getManager().transaction(async (manager) => {
-      try {
-        if (!user.candidate) {
-          user.candidate = await manager.findOne(Candidate, { where: { user: user.id } });
-        }
-
-        jobApplication = await manager.findOne(JobApplication, {
-          jobPostId,
-          candidateId: user.candidate.id,
-        });
-        if (jobApplication) {
-          throw new ConflictException('ALREADY_APPLY_TO_JOB');
-        }
-        // insert the new job application
-        jobApplication = await manager.create(JobApplication, {
-          jobPostId,
-          candidateId: user.id,
-        });
-        await manager.save(jobApplication);
-        const template = getApplyTemplate(user, jobPostExists.jobTitle);
-        const mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
-        await this.mailService.sendEmail(mailOptions);
-      } catch (error) {
-        throw new BadRequestException('FAILED_TO_APPLY_JOB');
+      jobApplication = await manager.findOne(JobApplication, {
+        jobPost: jobPostExists.id,
+        candidate: candidate.id,
+      });
+      if (jobApplication) {
+        throw new ConflictException('ALREADY_APPLY_TO_JOB');
       }
+      // insert the new job application
+      jobApplication = await manager.create(JobApplication, {
+        jobPost: jobPostExists.id,
+        candidate: candidate.id,
+      });
+      await manager.save(jobApplication);
+      const template = getApplyTemplate(candidate, jobPostExists.jobTitle);
+      const mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
+      await this.mailService.sendEmail(mailOptions);
+
       return { apply: true };
     });
   }
@@ -319,31 +312,14 @@ export class JobPostService {
   }
 
   async getAppliedCandidatesToJob(jobPostId: number) {
-    /*   const res = await this.jobPostRepository
-      .createQueryBuilder('job')
-      .innerJoinAndSelect('job.candidates', 'candidate')
-      .innerJoinAndSelect('job.candidates', 'candidate')
-
-
-      .execute();
-    console.log(res); */
-
-    const query = this.jobApplicationRepository.createQueryBuilder('jobA');
-
-    query.innerJoinAndSelect('candidate', 'candidate');
-    query.leftJoinAndSelect('candidate.user', 'user');
-    //    query.leftJoinAndSelect('candidate.experienceDetails', 'experienceDetails');
-
-    query.where('jobA.jobPostId = :jobPostId', { jobPostId });
-    const res = await query.execute();
-    console.log(res);
-
-    return res.map((r) => ({
-      id: r.user_id,
-      candidateId: r.candidate_id,
-      email: r.user_email,
-      name: r.candidate_name,
-    }));
+    const query = await this.jobApplicationRepository
+      .createQueryBuilder('jobA')
+      .andWhere('jobA.jobPost = :jobPostId', { jobPostId })
+      .leftJoinAndSelect('jobA.candidate', 'candidate')
+      .leftJoinAndSelect('candidate.user', 'user')
+      .addSelect(['candidate.id', 'candidate.name', 'candidate.resume', 'user'])
+      .getMany();
+    return query;
   }
 
   private createEmailOptions(company: Company, template: string, jobPost: JobPost): Email {
