@@ -12,7 +12,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from 'nestjs-typeorm-paginate';
+import { Repository } from 'typeorm';
 import { Public } from '../auth/decorators/public.decorator';
 import { Allow } from '../auth/decorators/role.decorator';
 import { GetUser } from '../auth/decorators/user.decorator';
@@ -23,7 +25,10 @@ import { JobPostService } from './job-post.service';
 
 @Controller('job-posts')
 export class JobPostController {
-  constructor(private readonly jobPostService: JobPostService) {}
+  constructor(
+    private readonly jobPostService: JobPostService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>
+  ) {}
 
   @Get()
   findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -71,7 +76,14 @@ export class JobPostController {
   }
 
   @Post('/:id/apply')
-  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
-    return this.jobPostService.applyToJobPost(id, user);
+  async applyToJobPost(
+    @Param('id') id: number,
+    @GetUser() user: User
+  ): Promise<{ apply: boolean }> {
+    // FIXME: temporary fix, should get candidate from user
+    const userWithCandidate = await this.userRepository.findOne(user.id, {
+      relations: ['candidate'],
+    });
+    return this.jobPostService.applyToJobPost(id, userWithCandidate);
   }
 }

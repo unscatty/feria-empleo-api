@@ -91,10 +91,9 @@ export class CandidateService {
   }
 
   async getCandidateById(candidateFilter: FilterCandidateDto) {
-    const candidate: Candidate = await this.candidateRepository.findOne(
-      candidateFilter.id,
-      { relations: ['experienceDetails', 'educationDetails', 'skillSets'] }
-    );
+    const candidate: Candidate = await this.candidateRepository.findOne(candidateFilter.id, {
+      relations: ['experienceDetails', 'educationDetails', 'skillSets'],
+    });
     return candidate;
   }
 
@@ -114,30 +113,30 @@ export class CandidateService {
     return this.getContactDetails(user);
   }
 
-  async updateResume(resume: UploadedFileMetadata, user: User, manager: EntityManager) {
+  async updateResume(resume: UploadedFileMetadata, candidate: Candidate, manager: EntityManager) {
     if (resume) {
       const url = await this.azure.upload(resume);
-      await manager.update(Candidate, { id: user.candidate.id }, { resume: url });
+      await manager.update(Candidate, { id: candidate.id }, { resume: url });
     }
   }
 
   async updateCandidate(
     updateCandidateDto: CreateCandidateDto,
     manager: EntityManager,
-    user: User
+    candidate: Candidate
   ) {
-    await this.updateContactDetails(updateCandidateDto, manager, user);
-    await this.updateSkillSets(updateCandidateDto, user, manager);
+    await this.updateContactDetails(updateCandidateDto, manager, candidate);
+    await this.updateSkillSets(updateCandidateDto, candidate, manager);
     await this.updateExperienceDetails(
       updateCandidateDto.experienceDetails as ExperienceDetail[],
-      user,
+      candidate,
       manager
     );
   }
 
   private async updateExperienceDetails(
     experienceDetails: ExperienceDetail[],
-    user: User,
+    candidate: Candidate,
     manager: EntityManager
   ) {
     const newExperiences = [];
@@ -159,13 +158,13 @@ export class CandidateService {
       }
     }
     if (!isEmpty(newExperiences)) {
-      await this.createNewExperiences(newExperiences, user, manager);
+      await this.createNewExperiences(newExperiences, candidate, manager);
     }
   }
 
   private async createNewExperiences(
     experiences: ExperienceDetail[],
-    user: User,
+    candidate: Candidate,
     manager: EntityManager
   ) {
     const newExperiences = [];
@@ -177,7 +176,7 @@ export class CandidateService {
       newExperience.jobTitle = experience.jobTitle;
       newExperience.jobDescription = experience.jobDescription;
       newExperience.companyName = experience.companyName;
-      newExperience.candidate.id = user.candidate.id;
+      newExperience.candidate.id = candidate.id;
       newExperiences.push(newExperience);
     }
     await manager.save(newExperiences);
@@ -186,9 +185,9 @@ export class CandidateService {
   private async updateContactDetails(
     updateCandidateDto: CreateCandidateDto,
     manager: EntityManager,
-    user: User
+    candidate: Candidate
   ): Promise<void> {
-    const detailsToUpdate = await ContactDetail.findOne({ where: { user: user.id } });
+    const detailsToUpdate = await ContactDetail.findOne({ where: { user: candidate.user.id } });
     await manager.update(
       ContactDetail,
       { id: detailsToUpdate.id },
@@ -203,22 +202,32 @@ export class CandidateService {
     );
   }
 
-  private async updateSkillSets(candidate: CreateCandidateDto, user: User, manager: EntityManager) {
-    const newSkillSets = this.getNewSkills(candidate.updateSkillSets);
+  private async updateSkillSets(
+    candidateDto: CreateCandidateDto,
+    candidate: Candidate,
+    manager: EntityManager
+  ) {
+    const newSkillSets = this.getNewSkills(candidateDto.updateSkillSets);
     const skillsSaved = await manager.save(SkillSet, newSkillSets);
     const candidatesSkillSets = [];
-    await this.deleteSkillsNotSelected(user, candidate.updateSkillSets, manager);
+    await this.deleteSkillsNotSelected(candidate, candidateDto.updateSkillSets, manager);
     for (const skill of skillsSaved) {
       const skillCandidate = new CandidateSkillSet();
-      skillCandidate.candidateId = user.candidate.id;
+      skillCandidate.candidateId = candidate.id;
       skillCandidate.skillSetId = skill.id;
       candidatesSkillSets.push(skillCandidate);
     }
     await manager.save(CandidateSkillSet, candidatesSkillSets);
   }
 
-  private async deleteSkillsNotSelected(user: User, skills: SkillSet[], manager: EntityManager) {
-    const currentSkills = await manager.find(CandidateSkillSet, { candidateId: user.candidate.id });
+  private async deleteSkillsNotSelected(
+    candidate: Candidate,
+    skills: SkillSet[],
+    manager: EntityManager
+  ) {
+    const currentSkills = await manager.find(CandidateSkillSet, {
+      candidateId: candidate.id,
+    });
     const currentSkillsIds = [];
     for (const skill of currentSkills) {
       currentSkillsIds.push(skill.skillSetId);

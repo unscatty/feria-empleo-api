@@ -13,10 +13,11 @@ import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils/common.utils';
 import { Company } from '../company/entities/company.entity';
 import { EmailService } from 'src/core/providers/mail/email.service';
+import { User } from '../user/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([JobPost, JobApplication, JobPostTag, UploadedImage, Company]),
+    TypeOrmModule.forFeature([JobPost, JobApplication, JobPostTag, UploadedImage, Company, User]),
     AzureStorageModule.withConfigAsync({
       useFactory: (config: ConfigService) => ({
         sasKey: config.get(EnvConfig.AZURE_STORAGE_SAS_KEY),
