@@ -15,7 +15,10 @@ import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { StateStore } from '@depthlabs/nestjs-state-machine';
 import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/core/state-machines/company.graph';
 import { ExposeToPlain, TransformToPlain } from 'src/shared/decorators/class-transform';
+import { RoleGroup } from 'src/modules/user/entities/role.entity';
+import { ExposeAdminDefault } from 'src/shared/decorators/expose-role-groups';
 
+@ExposeAdminDefault
 @Entity()
 export class Company extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
@@ -24,6 +27,7 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar' })
   name: string;
 
+  @ExposeToPlain({ groups: [RoleGroup.CURRENT_USER] })
   @Column({ type: 'varchar' })
   invitationEmail: string;
 
@@ -66,8 +70,9 @@ export class Company extends BaseEntity {
     cascade: true,
   })
   @JoinColumn()
-  image: UploadedImage;
+  image?: UploadedImage;
 
+  @ExposeToPlain({ groups: [RoleGroup.CURRENT_USER] })
   @OneToOne(() => User, (user) => user.company, {
     eager: true,
     cascade: true,
