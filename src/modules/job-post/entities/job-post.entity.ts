@@ -11,10 +11,13 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TransformToPlain } from 'src/shared/decorators/class-transform';
+import { JobApplication } from './job-application.entity';
 
 export enum JobPostType {
   FULL_TIME = 'full_time',
@@ -41,7 +44,7 @@ export class JobPost extends BaseEntity {
   @Column({ length: 500 })
   description: string;
 
-  @Column({ length: 2000 })
+  @Column({ length: 3000 })
   requirements: string;
 
   @Column({ nullable: true })
@@ -52,6 +55,7 @@ export class JobPost extends BaseEntity {
     nullable: true,
     cascade: true,
   })
+  @TransformToPlain(({ value }) => value?.imageURL)
   @JoinColumn()
   image: UploadedImage;
 
@@ -89,7 +93,7 @@ export class JobPost extends BaseEntity {
   })
   company: Company;
 
-  @ManyToMany(() => Candidate, (candidate) => candidate.jobPosts)
+  /* @ManyToMany(() => Candidate, (candidate) => candidate.jobPosts)
   @JoinTable({
     name: 'job_application',
     joinColumn: {
@@ -101,7 +105,10 @@ export class JobPost extends BaseEntity {
       referencedColumnName: 'id',
     },
   })
-  candidates: Candidate[];
+  candidates: Candidate[]; */
+
+  @OneToMany((type) => JobApplication, (jobA) => jobA.jobPost)
+  jobApplications: JobApplication[];
 
   @ManyToMany(() => SkillSet, (skillSet) => skillSet.jobPosts, {
     cascade: true,

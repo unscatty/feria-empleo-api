@@ -20,10 +20,14 @@ import { RoleType, User } from '../user/entities/user.entity';
 import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { JobPost } from './entities/job-post.entity';
 import { JobPostService } from './job-post.service';
+import { UserService } from '../user/user.service';
 
 @Controller('job-posts')
 export class JobPostController {
-  constructor(private readonly jobPostService: JobPostService) {}
+  constructor(
+    private readonly jobPostService: JobPostService,
+    private readonly userService: UserService
+  ) {}
 
   @Get()
   findAllJobPosts(@Query() filterJobPostsDto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -71,7 +75,16 @@ export class JobPostController {
   }
 
   @Post('/:id/apply')
-  applyToJobPost(@Param('id') id: number, @GetUser() user: User): Promise<{ apply: boolean }> {
-    return this.jobPostService.applyToJobPost(id, user);
+  async applyToJobPost(
+    @Param('id') id: number,
+    @GetUser() user: User
+  ): Promise<{ apply: boolean }> {
+    const candidate = await this.userService.getCandidate(user);
+    return this.jobPostService.applyToJobPost(id, candidate);
+  }
+
+  @Get('/:id/candidates-applied')
+  getAppliedCandidatesToJob(@Param('id') id: number) {
+    return this.jobPostService.getAppliedCandidatesToJob(id);
   }
 }

@@ -19,6 +19,7 @@ import { EmailService } from '../../core/providers/mail/email.service';
 import { Company } from '../company/entities/company.entity';
 import { Email } from 'src/core/providers/mail/email';
 import { IEmail } from 'src/shared/interfaces';
+import { Candidate } from '../candidate/models/candidate.entity';
 @Injectable()
 export class JobPostService {
   constructor(
@@ -29,9 +30,7 @@ export class JobPostService {
     @InjectRepository(UploadedImage)
     private uploadedImageRepository: Repository<UploadedImage>,
     private readonly azureStorage: AzureStorageService,
-    private mailService: EmailService,
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>
+    private mailService: EmailService
   ) {}
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -130,9 +129,16 @@ export class JobPostService {
     // start transaction
     return await getManager().transaction(async (manager) => {
       const newJobPost = manager.create(JobPost, createJobPostDto as any);
+      if (!user.company) {
+        user.company = await manager.findOne(Company, { where: { user: user.id } });
+      }
       newJobPost.company = user.company;
 
       if (image) {
+        const subFolder = getSlug(user.company.name) + '/';
+        image.originalname = `job-posts/${subFolder}${new Date().toISOString()}-${
+          image.originalname
+        }`;
         const imageURL = await this.azureStorage.upload(image);
         const newImage = this.uploadedImageRepository.create({ imageURL });
         newJobPost.image = newImage;
@@ -219,38 +225,32 @@ export class JobPostService {
     return this.jobPostRepository.save(currentJobPost);
   }
 
-  async applyToJobPost(jobPostId: number, user: User) {
-    try {
-      let jobPostExists: JobPost;
-      let jobApplication: JobApplication;
-      let template: string;
-      let mailOptions: Email;
-
-      jobPostExists = await this.findOneJobPost(jobPostId);
-      if (!jobPostExists.isActive) {
-        throw new NotFoundException('JOB_POST_NOT_FOUND');
-      }
-
-      jobApplication = await this.jobApplicationRepository.findOne({
-        jobPostId,
-        candidateId: user.candidate.id,
+  async applyToJobPost(jobPostId: number, candidate: Candidate) {
+    let jobApplication: JobApplication;
+    const jobPostExists = await this.findOneJobPost(jobPostId);
+    if (!jobPostExists.isActive) {
+      throw new NotFoundException('JOB_POST_NOT_FOUND');
+    }
+    return await getManager().transaction(async (manager) => {
+      jobApplication = await manager.findOne(JobApplication, {
+        jobPost: jobPostExists.id,
+        candidate: candidate.id,
       });
       if (jobApplication) {
         throw new ConflictException('ALREADY_APPLY_TO_JOB');
       }
       // insert the new job application
-      jobApplication = this.jobApplicationRepository.create({
-        jobPostId,
-        candidateId: user.id,
+      jobApplication = await manager.create(JobApplication, {
+        jobPost: jobPostExists.id,
+        candidate: candidate.id,
       });
-      await this.jobApplicationRepository.save(jobApplication);
-      template = getApplyTemplate(user, jobPostExists.jobTitle);
-      mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
+      await manager.save(jobApplication);
+      const template = getApplyTemplate(candidate, jobPostExists.jobTitle);
+      const mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
       await this.mailService.sendEmail(mailOptions);
-    } catch (error) {
-      throw new BadRequestException('FAILED_TO_APPLY_JOB');
-    }
-    return { apply: true };
+
+      return { apply: true };
+    });
   }
 
   async handleJobPostTags(
@@ -309,6 +309,17 @@ export class JobPostService {
       });
     }
     return skillSetsWithSlug;
+  }
+
+  async getAppliedCandidatesToJob(jobPostId: number) {
+    const query = await this.jobApplicationRepository
+      .createQueryBuilder('jobA')
+      .andWhere('jobA.jobPost = :jobPostId', { jobPostId })
+      .leftJoinAndSelect('jobA.candidate', 'candidate')
+      .leftJoinAndSelect('candidate.user', 'user')
+      .addSelect(['candidate.id', 'candidate.name', 'candidate.resume', 'user'])
+      .getMany();
+    return query;
   }
 
   private createEmailOptions(company: Company, template: string, jobPost: JobPost): Email {

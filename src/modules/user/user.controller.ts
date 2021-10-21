@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { deserialize, serialize } from 'class-transformer';
 import { Allow } from '../auth/decorators/role.decorator';
 import { GetUser } from '../auth/decorators/user.decorator';
 import { Candidate } from '../candidate/models/candidate.entity';
@@ -34,7 +35,9 @@ export class UserController {
   currentUser(@GetUser() user: User): Promise<Company | Candidate> | { user: User } {
     switch (user.role.name) {
       case RoleType.ADMIN:
-        return { user };
+        // do manual serialize object {user}
+        const userSerialize = serialize(user);
+        return { user: deserialize(User, userSerialize) };
       case RoleType.CANDIDATE:
         return this.userService.getCandidate(user);
       case RoleType.COMPANY:
