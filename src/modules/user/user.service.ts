@@ -60,11 +60,11 @@ export class UserService {
   }
 
   async getCompany(currentUser: User): Promise<Company> {
-    return this.companyRepository.findOneOrFail({ where: { user: currentUser } });
+    return this.companyRepository.findOneOrFail({ where: { user: { id: currentUser.id } } });
   }
 
   async getCandidate(currentUser: User): Promise<Candidate> {
-    return this.candidateRepository.findOneOrFail({ where: { user: currentUser } });
+    return this.candidateRepository.findOneOrFail({ where: { user: { id: currentUser.id } } });
   }
 
   /* async update(userId: number, user: UpdateUserDto): Promise<ReadUserDto> {

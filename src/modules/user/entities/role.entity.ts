@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { ExcludeToPlain } from 'src/shared/decorators/class-transform';
 import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum RoleType {
@@ -7,22 +7,21 @@ export enum RoleType {
   COMPANY = 'COMPANY',
 }
 
-export const roleGroupPrefix = 'role:';
+const roleGroupPrefix = 'role:';
 // To group when serializing
 export const RoleGroup = {
   ADMIN: roleGroupPrefix + RoleType.ADMIN,
   CANDIDATE: roleGroupPrefix + RoleType.CANDIDATE,
   COMPANY: roleGroupPrefix + RoleType.COMPANY,
-  PUBLIC: roleGroupPrefix + 'PUBLIC',
+  CURRENT_USER: roleGroupPrefix + 'CURRENT_USER',
 };
 
 @Entity()
 export class Role extends BaseEntity {
-  @Exclude({ toPlainOnly: true })
+  @ExcludeToPlain()
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Expose()
   @Column({
     type: 'simple-enum',
     enum: RoleType,
@@ -36,7 +35,7 @@ export class Role extends BaseEntity {
 
   // Timestamps
 
-  @Exclude({ toPlainOnly: true })
+  @ExcludeToPlain()
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 }
