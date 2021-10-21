@@ -17,13 +17,15 @@ import { Public } from '../auth/decorators/public.decorator';
 import { GetUser } from '../auth/decorators/user.decorator';
 import { RegisterGuard } from '../auth/strategies/b2c-register.strategy';
 import { User } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
 import { CandidateService } from './candidate.service';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { FilterCandidateDto } from './dto/filter-candidate.dto';
 
 @Controller('candidate')
 export class CandidateController {
-  constructor(private candidateService: CandidateService) {}
+  constructor(private candidateService: CandidateService, private userService: UserService) {}
+
   @Post('register')
   @Public()
   @UseGuards(RegisterGuard)
@@ -54,22 +56,24 @@ export class CandidateController {
 
   @Put('update')
   @Transaction()
-  updateCandidate(
+  async updateCandidate(
     @Body() updateCandidateDto: CreateCandidateDto,
     @GetUser() user: User,
     @TransactionManager() manager: EntityManager
   ) {
-    return this.candidateService.updateCandidate(updateCandidateDto, manager, user);
+    const candidate = await this.userService.getCandidate(user);
+    return this.candidateService.updateCandidate(updateCandidateDto, manager, candidate);
   }
 
   @Put('update/resume')
   @UseInterceptors(FileInterceptor('resume'))
   @Transaction()
-  updateResume(
+  async updateResume(
     @GetUser() user: User,
     @UploadedFile() resume: UploadedFileMetadata,
     @TransactionManager() manager: EntityManager
   ) {
-    return this.candidateService.updateResume(resume, user, manager);
+    const candidate = await this.userService.getCandidate(user);
+    return this.candidateService.updateResume(resume, candidate, manager);
   }
 }
