@@ -10,15 +10,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
+    const response = exception.getResponse();
+
     const status = exception.getStatus();
 
     const customProperties = {
       statusCode: status,
       path: request.url,
       error: exception.message,
+      message: response,
     };
 
-    this.logger.error(exception.message, exception.stack);
+    this.logger.error(JSON.stringify(response, null, 2), exception.stack);
     // (Shallow) Duplicate error object because method modifies original object
     appInsightsErrorMonitoringService.monitorigError(exception, { ...customProperties });
 

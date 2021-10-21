@@ -47,6 +47,7 @@ export class UserController {
   async currentUser(@GetUser() user: User): Promise<Candidate | Company | { user: User }> {
     switch (user.role.name) {
       case RoleType.ADMIN:
+        // Manually serialize object {user}
         return { user: classToPlain(user) as User };
       case RoleType.CANDIDATE:
         return this.userService.getCandidate(user);

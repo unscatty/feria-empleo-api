@@ -12,10 +12,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/modules/user/entities/user.entity';
-import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
 import { EducationDetail } from './education-detail.entity';
 import { ExperienceDetail } from './experience-detail.entity';
+import { JobApplication } from '../../job-post/entities/job-application.entity';
 
 @Entity()
 export class Candidate extends BaseEntity {
@@ -53,8 +53,8 @@ export class Candidate extends BaseEntity {
   @JoinColumn()
   user: User;
 
-  @ManyToMany(() => JobPost, (jobPost) => jobPost.candidates)
-  jobPosts: JobPost[];
+  @OneToMany(() => JobApplication, (jobA) => jobA.candidate)
+  jobApplications: JobApplication[];
 
   @OneToMany(() => ExperienceDetail, (expDetail) => expDetail.candidate, {
     cascade: true,
