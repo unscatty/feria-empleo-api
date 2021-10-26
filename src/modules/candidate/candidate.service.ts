@@ -38,17 +38,15 @@ export class CandidateService {
       }
       const role = await manager.findOne(Role, { where: { name: RoleType.CANDIDATE } });
       const newUser = manager.create(User, {
-        email: createCandidateDto.email,
-        name: createCandidateDto.name,
-        lastname: '',
+        ...createCandidateDto,
         role,
       });
-      newUser.role = role;
-      await manager.save(newUser);
+
+      // await manager.save(newUser);
       const candidate = manager.create(Candidate, {
         user: newUser,
       });
-      await manager.save(candidate);
+      // await manager.save(candidate);
 
       if (createCandidateDto.skillSets) {
         // insert all skill sets in table
@@ -78,9 +76,9 @@ export class CandidateService {
         }
         candidate.educationDetails = educationDetails;
       }
-      newUser.candidate = candidate;
+      // newUser.candidate = candidate;
 
-      return manager.save(newUser);
+      return manager.save(candidate);
     });
   }
 
