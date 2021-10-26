@@ -22,20 +22,26 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', nullable: false, unique: true })
   email: string;
 
-  private isA(role: RoleType) {
+  @Column({ type: 'varchar', nullable: false })
+  name: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  lastname: string;
+
+  private is(role: RoleType) {
     return this.role.name === role;
   }
 
   isAdmin(): boolean {
-    return this.isA(RoleType.ADMIN);
+    return this.is(RoleType.ADMIN);
   }
 
   isCompany(): boolean {
-    return this.isA(RoleType.COMPANY);
+    return this.is(RoleType.COMPANY);
   }
 
   isCandidate(): boolean {
-    return this.isA(RoleType.CANDIDATE);
+    return this.is(RoleType.CANDIDATE);
   }
 
   get roleGroup(): string {

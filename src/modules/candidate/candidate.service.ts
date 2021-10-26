@@ -1,7 +1,7 @@
 import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { findIndex, head, isEmpty, isEqual, isUndefined, reduce } from 'lodash';
+import { findIndex, isEmpty, isEqual, isUndefined } from 'lodash';
 import { EntityManager, getManager, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { ContactDetail } from '../user/entities/contact-detail.entity';
@@ -37,12 +37,15 @@ export class CandidateService {
         throw new ConflictException('USER_ALREADY_EXISTS');
       }
       const role = await manager.findOne(Role, { where: { name: RoleType.CANDIDATE } });
-      const newUser = manager.create(User, { email: createCandidateDto.email, role });
+      const newUser = manager.create(User, {
+        email: createCandidateDto.email,
+        name: createCandidateDto.name,
+        lastname: '',
+        role,
+      });
       newUser.role = role;
       await manager.save(newUser);
       const candidate = manager.create(Candidate, {
-        name: createCandidateDto.name,
-        lastname: '',
         user: newUser,
       });
       await manager.save(candidate);
