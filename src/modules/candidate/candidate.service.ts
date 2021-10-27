@@ -42,11 +42,9 @@ export class CandidateService {
         role,
       });
 
-      // await manager.save(newUser);
       const candidate = manager.create(Candidate, {
         user: newUser,
       });
-      // await manager.save(candidate);
 
       if (createCandidateDto.skillSets) {
         // insert all skill sets in table
@@ -76,7 +74,6 @@ export class CandidateService {
         }
         candidate.educationDetails = educationDetails;
       }
-      // newUser.candidate = candidate;
 
       return manager.save(candidate);
     });
