@@ -18,9 +18,16 @@ import { ExposeToPlain, TransformToPlain } from 'src/shared/decorators/class-tra
 import { RoleGroup } from 'src/modules/user/entities/role.entity';
 import { ExposeAdminDefault } from 'src/shared/decorators/expose-role-groups';
 
+export enum CompanyUseEmailOptions {
+  INVITATION = 'INVITATION',
+  USER = 'USER',
+}
+
 @ExposeAdminDefault
 @Entity()
 export class Company extends BaseEntity {
+  static EmailOptions = CompanyUseEmailOptions;
+
   @PrimaryGeneratedColumn('increment')
   id: number;
 
@@ -51,6 +58,18 @@ export class Company extends BaseEntity {
   @StateStore(COMPANY_GRAPH_NAME)
   @Column({ nullable: false, default: COMPANY_STATES.INVITED })
   state: string;
+
+  // Methods
+
+  getAvailableEmail(emailOption: CompanyUseEmailOptions): string {
+    switch (emailOption) {
+      case CompanyUseEmailOptions.INVITATION:
+        return this.invitationEmail;
+
+      case CompanyUseEmailOptions.USER:
+        return this.user.email;
+    }
+  }
 
   // Timestamps
 

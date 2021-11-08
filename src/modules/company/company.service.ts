@@ -199,19 +199,18 @@ export class CompanyService {
     return updatedCompany.image.imageURL;
   }
 
-  public async updateCurrentCompany(
-    currentUser: User,
+  @Transaction()
+  public async update(
+    company: Company,
     updateCompanyDto: UpdateCompanyDto,
-    manager: EntityManager
+    @TransactionManager() manager?: EntityManager
   ): Promise<Company> {
-    const currentCompany = await this.userService.getCompany(currentUser);
-
-    // Merge current company data with DTO data to update it later in the database
-    const mergedWithDto = manager.merge(Company, currentCompany, {
+    // Merge company data with DTO data to update it later in the database
+    const mergedWithDto = manager.merge(Company, company, {
       ...updateCompanyDto,
       // Use either invitation email or user email as current active email
       // Do not change if no option present in DTO
-      activeEmail: currentCompany.getAvailableEmail(updateCompanyDto.useEmail),
+      activeEmail: company.getAvailableEmail(updateCompanyDto.useEmail),
     });
 
     // Update merged data

@@ -27,6 +27,7 @@ import { RoleType, User } from '../user/entities/user.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { FilterCompanyDto } from './dto/filter-company.dto';
+import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { Company } from './entities/company.entity';
 
@@ -94,6 +95,18 @@ export class CompanyController {
   @Put(':id')
   updateCompany(@Param('id') id: number, @Body() company: Company) {
     return this.companyService.updateCompany(id, company);
+  }
+
+  @Put('')
+  @SerializeOptions({ groups: [RoleGroup.CURRENT_USER] })
+  @Allow(RoleType.COMPANY)
+  async updateCurrent(
+    @Body() updateCompanyDto: UpdateCompanyDto,
+    @GetUser() user: User
+  ): Promise<Company> {
+    const currentCompany = await this.companyService.getCurrent(user);
+
+    return this.companyService.update(currentCompany, updateCompanyDto);
   }
 
   @Patch('update-image')
