@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -26,6 +27,7 @@ import { RoleType, User } from '../user/entities/user.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { FilterCompanyDto } from './dto/filter-company.dto';
+import { UpdateImageDto } from './dto/update-image.dto';
 import { Company } from './entities/company.entity';
 
 @Controller('company')
@@ -92,6 +94,21 @@ export class CompanyController {
   @Put(':id')
   updateCompany(@Param('id') id: number, @Body() company: Company) {
     return this.companyService.updateCompany(id, company);
+  }
+
+  @Patch('update-image')
+  @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
+  async updateImageCurrent(
+    @UploadedFile() imageFile: UploadedFileMetadata,
+    @Body() imageDto: UpdateImageDto,
+    @GetUser() user: User
+  ) {
+    imageDto.image = imageFile;
+
+    const currentCompany = await this.companyService.getCurrent(user);
+
+    return this.companyService.updateImage(currentCompany, imageDto);
   }
 
   @Delete(':id')

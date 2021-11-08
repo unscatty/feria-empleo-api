@@ -82,7 +82,7 @@ export class User extends BaseEntity {
   })
   candidate?: Candidate;
 
-  @ManyToOne(() => Role, { eager: true, cascade: true })
+  @ManyToOne(() => Role, { eager: true, cascade: true, nullable: false })
   @TransformToPlain(({ value }) => value?.name)
   role: Role;
 }
