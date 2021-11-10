@@ -54,14 +54,15 @@ export class CompanyController {
   }
 
   @Post('register')
-  @SerializeOptions({ groups: [RoleGroup.COMPANY] })
+  @SerializeOptions({ groups: [RoleGroup.CURRENT_USER] })
   @UseInterceptors(StateMachineExceptionInterceptor)
   @UseGuards(RegisterGuard)
   @Public()
   register(@Body('token') token: string, @GetUser() user: User) {
     const dto = new CreateUserDto();
     dto.email = user.email;
-    dto.username = '';
+    dto.name = user.name;
+    dto.lastname = user.lastname;
     return this.companyService.register(token, dto);
   }
 

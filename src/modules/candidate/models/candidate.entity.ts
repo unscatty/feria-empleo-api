@@ -22,12 +22,6 @@ export class Candidate extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'varchar', length: 25, nullable: false })
-  name: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: false })
-  lastname: string;
-
   @Column({ type: 'float', nullable: true })
   currentSalary: number;
 

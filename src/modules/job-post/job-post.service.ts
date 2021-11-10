@@ -317,7 +317,7 @@ export class JobPostService {
       .andWhere('jobA.jobPost = :jobPostId', { jobPostId })
       .leftJoinAndSelect('jobA.candidate', 'candidate')
       .leftJoinAndSelect('candidate.user', 'user')
-      .addSelect(['candidate.id', 'candidate.name', 'candidate.resume', 'user'])
+      .addSelect(['candidate.id', 'candidate.resume', 'user'])
       .getMany();
     return query;
   }

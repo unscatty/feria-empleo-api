@@ -25,11 +25,13 @@ export class B2CRegisterStrategy extends PassportStrategy(BearerStrategy, regist
   }
 
   async validate(req: Request, token: any, done: VerifyCallback): Promise<User> {
-    const { emails } = token;
+    const { emails, given_name, family_name } = token;
     const email = emails[0];
 
     const user = new User();
     user.email = email;
+    user.name = given_name;
+    user.lastname = family_name;
 
     return user;
   }
