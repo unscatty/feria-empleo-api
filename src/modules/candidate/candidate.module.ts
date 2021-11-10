@@ -9,7 +9,6 @@ import { ContactDetail } from '../user/entities/contact-detail.entity';
 import { AzureStorageModule } from '@nestjs/azure-storage';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from 'src/config/config.keys';
-import { EducationDetailService } from './education-detail/education-detail.service';
 import { EducationDetail } from './models/education-detail.entity';
 import { ExperienceDetail } from './models/experience-detail.entity';
 
@@ -27,6 +26,6 @@ import { ExperienceDetail } from './models/experience-detail.entity';
     }),
   ],
   controllers: [CandidateController],
-  providers: [CandidateService, EducationDetailService],
+  providers: [CandidateService],
 })
 export class CandidateModule {}

@@ -90,7 +90,6 @@ export class CandidateService {
         }
         candidate.educationDetails = educationDetails;
       }
-      // newUser.candidate = candidate;
 
       return manager.save(candidate);
     });
