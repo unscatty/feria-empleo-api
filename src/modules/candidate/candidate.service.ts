@@ -7,12 +7,18 @@ import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { ContactDetail } from '../user/entities/contact-detail.entity';
 import { Role, RoleType } from '../user/entities/role.entity';
 import { User } from '../user/entities/user.entity';
-import { CreateCandidateDto } from './dto/create-candidate.dto';
+import {
+  CreateCandidateDto,
+  ContactDetailsDto,
+  ExperienceDetailDto,
+} from './dto/create-candidate.dto';
 import { FilterCandidateDto } from './dto/filter-candidate.dto';
 import { CandidateSkillSet } from './models/candidate-skill-set.entity';
 import { Candidate } from './models/candidate.entity';
 import { EducationDetail } from './models/education-detail.entity';
 import { ExperienceDetail } from './models/experience-detail.entity';
+import { UpdateCandidateDto } from './dto/update-candidate.dto';
+import { EducationDetailDto } from './dto/create-candidate.dto';
 
 @Injectable()
 export class CandidateService {
@@ -23,6 +29,10 @@ export class CandidateService {
     private candidateRepository: Repository<Candidate>,
     @InjectRepository(ContactDetail)
     private contactDetailsRepository: Repository<ContactDetail>,
+    @InjectRepository(EducationDetail)
+    private educationDetailsRepository: Repository<EducationDetail>,
+    @InjectRepository(ExperienceDetail)
+    private experienceDetailsRepository: Repository<ExperienceDetail>,
     private azure: AzureStorageService
   ) {
     this.queryBuilder = () => this.candidateRepository.createQueryBuilder('candidate');
@@ -43,10 +53,10 @@ export class CandidateService {
       });
 
       // await manager.save(newUser);
-      const candidate = manager.create(Candidate, {
+      let candidate = manager.create(Candidate, {
         user: newUser,
       });
-      // await manager.save(candidate);
+      candidate = await manager.save(candidate);
 
       if (createCandidateDto.skillSets) {
         // insert all skill sets in table
@@ -65,14 +75,18 @@ export class CandidateService {
       if (createCandidateDto.experienceDetails) {
         const experienceDetails = [];
         for (const detail of createCandidateDto.experienceDetails) {
-          experienceDetails.push(manager.create(ExperienceDetail, { ...detail }));
+          experienceDetails.push(
+            manager.create(ExperienceDetail, { ...detail, candidate: candidate.id })
+          );
         }
         candidate.experienceDetails = experienceDetails;
       }
       if (createCandidateDto.educationDetails) {
         const educationDetails = [];
         for (const detail of createCandidateDto.educationDetails) {
-          educationDetails.push(manager.create(EducationDetail, { ...detail }));
+          educationDetails.push(
+            manager.create(EducationDetail, { ...detail, candidate: candidate.id })
+          );
         }
         candidate.educationDetails = educationDetails;
       }
@@ -118,25 +132,32 @@ export class CandidateService {
     if (resume) {
       const url = await this.azure.upload(resume);
       await manager.update(Candidate, { id: candidate.id }, { resume: url });
+      return { url };
     }
   }
 
   async updateCandidate(
-    updateCandidateDto: CreateCandidateDto,
+    updateCandidateDto: UpdateCandidateDto,
     manager: EntityManager,
     candidate: Candidate
   ) {
-    await this.updateContactDetails(updateCandidateDto, manager, candidate);
-    await this.updateSkillSets(updateCandidateDto, candidate, manager);
-    await this.updateExperienceDetails(
-      updateCandidateDto.experienceDetails as ExperienceDetail[],
-      candidate,
-      manager
-    );
+    if (updateCandidateDto.contactDetails) {
+      await this.updateContactDetails(updateCandidateDto.contactDetails, manager, candidate);
+    }
+    if (updateCandidateDto.skillSets) {
+      await this.updateSkillSets(updateCandidateDto.skillSets, candidate, manager);
+    }
+    if (updateCandidateDto.experienceDetails) {
+      await this.updateExperienceDetails(updateCandidateDto.experienceDetails, candidate, manager);
+    }
+
+    if (updateCandidateDto.educationDetails) {
+      await this.updateEducationDetails(updateCandidateDto.educationDetails, candidate, manager);
+    }
   }
 
   private async updateExperienceDetails(
-    experienceDetails: ExperienceDetail[],
+    experienceDetails: ExperienceDetailDto[],
     candidate: Candidate,
     manager: EntityManager
   ) {
@@ -163,6 +184,38 @@ export class CandidateService {
     }
   }
 
+  async updateEducationDetails(
+    educationDetails: EducationDetailDto[],
+    candidate: Candidate,
+    manager: EntityManager
+  ) {
+    const newEducationDetails = [];
+    for (const education of educationDetails) {
+      if (isUndefined(education.id)) {
+        newEducationDetails.push(
+          manager.create(EducationDetail, { ...education, candidate: candidate.id })
+        );
+      } else {
+        await manager.update(
+          EducationDetail,
+          { id: education.id },
+          {
+            institutionName: education.institutionName,
+            degree: education.degree,
+            level: education.level,
+            startDate: education.startDate,
+            endDate: education.endDate,
+            currentlyInSchool: education.currentlyInSchool,
+            description: education.description,
+          }
+        );
+      }
+    }
+    if (!isEmpty(newEducationDetails)) {
+      await manager.save(newEducationDetails);
+    }
+  }
+
   private async createNewExperiences(
     experiences: ExperienceDetail[],
     candidate: Candidate,
@@ -184,78 +237,79 @@ export class CandidateService {
   }
 
   private async updateContactDetails(
-    updateCandidateDto: CreateCandidateDto,
+    contactDetails: ContactDetailsDto,
     manager: EntityManager,
     candidate: Candidate
   ): Promise<void> {
     const detailsToUpdate = await ContactDetail.findOne({ where: { user: candidate.user.id } });
-    await manager.update(
-      ContactDetail,
-      { id: detailsToUpdate.id },
-      {
-        phone: updateCandidateDto.contactDetails.phone,
-        linkedinUrl: updateCandidateDto.contactDetails.linkedinUrl,
-        facebookUrl: updateCandidateDto.contactDetails.facebookUrl,
-        webSite: updateCandidateDto.contactDetails.webSite,
-        githubUrl: updateCandidateDto.contactDetails.githubUrl,
-        address: updateCandidateDto.contactDetails.address,
-      }
-    );
-  }
-
-  private async updateSkillSets(
-    candidateDto: CreateCandidateDto,
-    candidate: Candidate,
-    manager: EntityManager
-  ) {
-    const newSkillSets = this.getNewSkills(candidateDto.updateSkillSets);
-    const skillsSaved = await manager.save(SkillSet, newSkillSets);
-    const candidatesSkillSets = [];
-    await this.deleteSkillsNotSelected(candidate, candidateDto.updateSkillSets, manager);
-    for (const skill of skillsSaved) {
-      const skillCandidate = new CandidateSkillSet();
-      skillCandidate.candidateId = candidate.id;
-      skillCandidate.skillSetId = skill.id;
-      candidatesSkillSets.push(skillCandidate);
+    if (!detailsToUpdate) {
+      await manager.save(ContactDetail, {
+        phone: contactDetails.phone,
+        linkedinUrl: contactDetails.linkedinUrl,
+        facebookUrl: contactDetails.facebookUrl,
+        webSite: contactDetails.webSite,
+        githubUrl: contactDetails.githubUrl,
+        address: contactDetails.address,
+        user: candidate.user.id,
+      });
+    } else {
+      await manager.update(
+        ContactDetail,
+        { id: detailsToUpdate.id },
+        {
+          phone: contactDetails.phone,
+          linkedinUrl: contactDetails.linkedinUrl,
+          facebookUrl: contactDetails.facebookUrl,
+          webSite: contactDetails.webSite,
+          githubUrl: contactDetails.githubUrl,
+          address: contactDetails.address,
+        }
+      );
     }
-    await manager.save(CandidateSkillSet, candidatesSkillSets);
   }
 
-  private async deleteSkillsNotSelected(
-    candidate: Candidate,
-    skills: SkillSet[],
-    manager: EntityManager
-  ) {
-    const currentSkills = await manager.find(CandidateSkillSet, {
+  private async updateSkillSets(skillSets: number[], candidate: Candidate, manager: EntityManager) {
+    const currentSkillSets = await manager.find(CandidateSkillSet, {
       candidateId: candidate.id,
     });
-    const currentSkillsIds = [];
-    for (const skill of currentSkills) {
-      currentSkillsIds.push(skill.skillSetId);
+    const skillSetsAdded = skillSets.filter(
+      (skill) => !currentSkillSets.some(({ skillSetId }: any) => skill === skillSetId)
+    );
+    const skillSetsDeleted = currentSkillSets.filter(
+      (s) => !skillSets.some((skill) => s.skillSetId === skill)
+    );
+    console.log('skillSetsAdded', skillSetsAdded);
+    console.log('skillSetsDeleted', skillSetsDeleted);
+
+    if (skillSetsAdded.length) {
+      const newSkills = skillSetsAdded.map((skill) =>
+        manager.create(CandidateSkillSet, { skillSetId: skill, candidateId: candidate.id })
+      );
+      await manager.insert(CandidateSkillSet, newSkills);
     }
-    for (const skill of skills) {
-      const indexFound = findIndex(currentSkillsIds, (id) => {
-        return isEqual(id, skill.id);
+
+    if (skillSetsDeleted.length) {
+      const ids = skillSetsDeleted.map((skill) => skill.skillSetId);
+      await manager.delete(CandidateSkillSet, {
+        candidateId: candidate.id,
+        skillSetId: In(ids),
       });
-      if (indexFound != -1) {
-        currentSkillsIds.splice(indexFound, 1);
-      }
-    }
-    if (!isEmpty(currentSkillsIds)) {
-      await manager.delete(CandidateSkillSet, { skillSetId: In(currentSkillsIds) });
     }
   }
 
-  private getNewSkills(skillSet: SkillSet[]) {
-    const newSkills = [];
-    for (const skill of skillSet) {
-      if (isUndefined(skill.id)) {
-        const newSkill = new SkillSet();
-        newSkill.name = skill.name;
-        newSkill.slug = skill.slug;
-        newSkills.push(newSkill);
-      }
+  async deleteEducationDetail(id: number, candidate: Candidate) {
+    const res = await this.educationDetailsRepository.delete({ id: id, candidate: candidate.id });
+    if (res.affected > 0) {
+      return { affected: true };
     }
-    return newSkills;
+    return { affected: false };
+  }
+
+  async deleteExperienceDetail(id: number, candidate: Candidate) {
+    const res = await this.experienceDetailsRepository.delete({ id: id, candidate: candidate.id });
+    if (res.affected > 0) {
+      return { affected: true };
+    }
+    return { affected: false };
   }
 }

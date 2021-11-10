@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Candidate } from './candidate.entity';
+import { ManyToOne } from 'typeorm';
 
 @Entity()
 export class EducationDetail extends BaseEntity {
@@ -33,7 +34,9 @@ export class EducationDetail extends BaseEntity {
   @Column({ type: 'date', nullable: true })
   endDate: Date;
 
-  @Column({ type: 'bit', nullable: true })
+  @Column({
+    nullable: true,
+  })
   currentlyInSchool: boolean;
 
   @Column({ type: 'varchar', length: 250, nullable: true })
@@ -49,9 +52,9 @@ export class EducationDetail extends BaseEntity {
 
   // Relationships
 
-  @OneToOne(() => Candidate, {
+  @ManyToOne(() => Candidate, (candidate) => candidate.educationDetails, {
     nullable: false,
   })
   @JoinColumn()
-  candidate: Candidate;
+  candidate: Candidate | number;
 }

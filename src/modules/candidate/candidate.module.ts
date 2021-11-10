@@ -9,10 +9,13 @@ import { ContactDetail } from '../user/entities/contact-detail.entity';
 import { AzureStorageModule } from '@nestjs/azure-storage';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from 'src/config/config.keys';
+import { EducationDetailService } from './education-detail/education-detail.service';
+import { EducationDetail } from './models/education-detail.entity';
+import { ExperienceDetail } from './models/experience-detail.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Candidate, User, ContactDetail]),
+    TypeOrmModule.forFeature([Candidate, User, ContactDetail, EducationDetail, ExperienceDetail]),
     UserModule,
     AzureStorageModule.withConfigAsync({
       useFactory: (config: ConfigService) => ({
@@ -24,6 +27,6 @@ import { EnvConfig } from 'src/config/config.keys';
     }),
   ],
   controllers: [CandidateController],
-  providers: [CandidateService],
+  providers: [CandidateService, EducationDetailService],
 })
 export class CandidateModule {}
