@@ -4,7 +4,7 @@ import MailerStrategy from '../mailer-strategy';
 import mailerModulesContainer from '../mailer-module-container';
 
 export const mailerCoreModuleOptions: MailerCoreModuleOptions = {
-  strategy: MailerStrategy.SMTP,
+  strategy: MailerStrategy.SENDGRID,
   modules: mailerModulesContainer,
 };
 

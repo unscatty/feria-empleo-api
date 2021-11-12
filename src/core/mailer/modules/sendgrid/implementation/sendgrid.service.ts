@@ -3,8 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientResponse, MailDataRequired, MailService, ResponseError } from '@sendgrid/mail';
 // deepmerge ESM entry point was dropped due to a Webpack bug. DO NOT REFACTOR
 // https://github.com/webpack/webpack/issues/6584
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const deepmerge = require('deepmerge');
+import * as deepmerge from 'deepmerge';
 import { SendGridConstants } from './sendgrid.constants';
 import { SendGridModuleOptions } from './sendgrid.interfaces';
 import { logger } from './sendgrid.logger';

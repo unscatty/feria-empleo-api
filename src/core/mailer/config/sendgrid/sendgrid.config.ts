@@ -9,6 +9,7 @@ export default registerAs(
     apikey: process.env[EnvConfig.SEND_GRID_API_KEY],
     defaultMailData: {
       from: mailerDefaultFrom,
+      to: 'keyovak164@gyn5.com',
     },
   })
 );

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import Email from './mailer-data.interface';
+import { Email } from './email.interfaces';
 
 @Injectable()
 export abstract class IMailerService {
-  abstract sendMail(data: Email): Promise<void>;
+  abstract sendMail(email: Email): Promise<void>;
 }

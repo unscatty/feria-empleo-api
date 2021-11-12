@@ -1,5 +1,5 @@
 import { ClassProvider, DynamicModule, Module } from '@nestjs/common';
-import { IMailerService } from '../../interfaces/mailer.service.interface';
+import { IMailerService } from '../../interfaces/mailer-service.interface';
 import { SendGridModule } from './implementation/sendgrid.module';
 import SendgridMailerService from './sendgrid-mailer.service';
 

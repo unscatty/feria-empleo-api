@@ -1,6 +1,6 @@
 import { MailerModule as NodeMailerModule, MAILER_OPTIONS } from '@nestjs-modules/mailer';
 import { ClassProvider, DynamicModule, Module } from '@nestjs/common';
-import { IMailerService } from '../../interfaces/mailer.service.interface';
+import { IMailerService } from '../../interfaces/mailer-service.interface';
 import SMTPMailerService from './smtp-mailer.service';
 
 @Module({})
