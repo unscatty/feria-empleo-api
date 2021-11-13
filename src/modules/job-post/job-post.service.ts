@@ -3,7 +3,6 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Email, IMailerService } from 'src/core/mailer';
-import { IEmail } from 'src/shared/interfaces';
 import { getApplyTemplate } from 'src/templates/apply.template';
 import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
 import { UploadedImage } from '../../core/entities/uploaded-image.entity';
