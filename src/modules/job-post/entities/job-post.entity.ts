@@ -44,7 +44,7 @@ export class JobPost extends BaseEntity {
   @Column({ length: 500 })
   description: string;
 
-  @Column({ length: 3000 })
+  @Column({ length: 3000, nullable: true })
   requirements: string;
 
   @Column({ nullable: true })
