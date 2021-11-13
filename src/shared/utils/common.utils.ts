@@ -12,15 +12,15 @@ export const getSlug = (text) => {
 };
 
 export const removeEmptyValues = <T = any>(obj: T) => {
-  const newObj = {} as T;
-
   Object.keys(obj).forEach((key) => {
-    if (obj[key] === Object(obj[key])) {
-      newObj[key] = removeEmptyValues(obj[key]);
-    } else if (obj[key] !== undefined) {
-      newObj[key] = obj[key];
+    if (Array.isArray(obj[key])) {
+      obj[key].forEach(removeEmptyValues);
+    } else if (typeof obj[key] === 'object' && !Buffer.isBuffer(obj[key])) {
+      obj[key] = removeEmptyValues(obj[key]);
+    } else if (obj[key] === undefined) {
+      delete obj[key];
     }
   });
 
-  return newObj;
+  return obj;
 };

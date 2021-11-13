@@ -40,6 +40,6 @@ export default class SMTPMailerService implements IMailerService {
       return data;
     }
 
-    return deepmerge(this.mailerOptions.defaults, data);
+    return deepmerge(this.mailerOptions.defaults, data, { clone: false });
   }
 }

@@ -33,7 +33,8 @@ export const toAttachmentData = (attachment: MailAttachment): SendgridAttachment
   if (attachment) {
     return {
       filename: attachment.filename,
-      content: attachment.content?.toString(),
+      // Sendgrid requires data to be base64 encoded
+      content: attachment.content?.toString('base64'),
       type: attachment.contentType,
       disposition: attachment.contentDisposition,
       contentId: attachment.contentId,
