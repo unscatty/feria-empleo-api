@@ -1,7 +1,8 @@
 import { MailerOptions as NodeMailerOptions } from '@nestjs-modules/mailer';
 import { registerAs } from '@nestjs/config';
 import { EnvConfig } from 'src/config/config.keys';
-import { mailerDefaultFrom } from '../defaults.config';
+import toSMTPMailData from 'src/shared/utils/mailer/smtp.util';
+import { defaultMailData } from '../mailer-default.config';
 
 const ENV = process.env;
 
@@ -19,8 +20,6 @@ export default registerAs(
         pass: ENV[EnvConfig.EMAIL_PASSWORD],
       },
     },
-    defaults: {
-      from: mailerDefaultFrom,
-    },
+    defaults: toSMTPMailData(defaultMailData()),
   })
 );

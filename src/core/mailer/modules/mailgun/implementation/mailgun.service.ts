@@ -1,12 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import * as deepmerge from 'deepmerge';
-import formData from 'form-data';
-import Mailgun from 'mailgun.js';
 import Client from 'mailgun.js/dist/lib/client';
 import { MailData } from './interfaces/mailgun-mail-data.interface';
 import { MailgunConstants } from './mailgun.constants';
 import { MailgunModuleOptions } from './mailgun.interfaces';
 import { mailgunLogger } from './mailgun.logger';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const formData = require('form-data');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Mailgun = require('mailgun.js');
 
 @Injectable()
 export class MailgunService {

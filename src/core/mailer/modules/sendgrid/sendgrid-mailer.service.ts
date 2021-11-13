@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { MailDataRequired } from '@sendgrid/mail';
-import {
-  removeEmptyValues,
-  toAttachmentData,
-  toEmailData,
-  toSendgridHeaders,
-  toSingleEmailData,
-} from 'src/shared/utils/';
+import { removeEmptyValues } from 'src/shared/utils/';
+import toSendgridMailData from 'src/shared/utils/mailer/sendgrid.util';
 import { Email } from '../../interfaces/email.interfaces';
 import { IMailerService } from '../../interfaces/mailer-service.interface';
 import { SendGridService } from './implementation/sendgrid.service';
@@ -20,32 +15,8 @@ export default class SendgridMailerService implements IMailerService {
   }
 
   private toMailData(email: Email): MailDataRequired {
-    const { to, cc, bcc, from, replyTo, date, attachments, headers } = email;
+    const sendgridData = toSendgridMailData(email);
 
-    const sgFrom = toSingleEmailData(from);
-    const sgReplyTo = toSingleEmailData(replyTo);
-
-    const sgTo = toEmailData(to);
-    const sgCC = toEmailData(cc);
-    const sgBCC = toEmailData(bcc);
-
-    const sgAttachments = attachments?.map(toAttachmentData);
-    const sgHeaders = toSendgridHeaders(headers);
-
-    const sgData = {
-      from: sgFrom,
-      subject: email.subject,
-      to: sgTo,
-      cc: sgCC,
-      bcc: sgBCC,
-      replyTo: sgReplyTo,
-      text: email.text?.toString(),
-      html: email.html?.toString(),
-      attachments: sgAttachments,
-      sendAt: date?.getTime(),
-      headers: sgHeaders,
-    };
-
-    return removeEmptyValues(sgData);
+    return removeEmptyValues(sendgridData);
   }
 }

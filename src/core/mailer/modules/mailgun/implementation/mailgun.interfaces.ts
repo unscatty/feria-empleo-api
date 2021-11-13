@@ -11,7 +11,7 @@ export interface MailgunOptions extends Options {
 export interface MailgunModuleOptions {
   options: MailgunOptions;
 
-  defaults: Partial<MailData>;
+  defaults?: Partial<MailData>;
 }
 
 export type MailgunModuleAsyncOptions = {

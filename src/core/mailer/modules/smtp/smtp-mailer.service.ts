@@ -8,7 +8,8 @@ import { Inject, Injectable } from '@nestjs/common';
 // deepmerge ESM entry point was dropped due to a Webpack bug. DO NOT REFACTOR
 // https://github.com/webpack/webpack/issues/6584
 import * as deepmerge from 'deepmerge';
-import { removeEmptyValues, toAttachment } from 'src/shared/utils';
+import { removeEmptyValues } from 'src/shared/utils';
+import toSMTPMailData from 'src/shared/utils/mailer/smtp.util';
 import { Email } from '../../interfaces/email.interfaces';
 import { IMailerService } from '../../interfaces/mailer-service.interface';
 
@@ -28,9 +29,7 @@ export default class SMTPMailerService implements IMailerService {
   }
 
   private toMailData(email: Email): ISendMailOptions {
-    const smtpAttachments = email.attachments?.map(toAttachment);
-
-    const smtpData = { ...email, attachments: smtpAttachments };
+    const smtpData = toSMTPMailData(email);
 
     return removeEmptyValues(smtpData);
   }

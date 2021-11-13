@@ -1,5 +1,5 @@
 import { ISendMailOptions } from '@nestjs-modules/mailer';
-import { Attachment } from 'src/core/mailer/interfaces/email.interfaces';
+import { Attachment, Email } from 'src/core/mailer/interfaces/email.interfaces';
 
 type NodeMailerAttachment = ISendMailOptions['attachments'][0];
 
@@ -13,3 +13,11 @@ export const toAttachment = (attachment: Attachment): NodeMailerAttachment => {
     };
   }
 };
+
+const toSMTPMailData = (email: Partial<Email>): ISendMailOptions => {
+  const smtpAttachments = email.attachments?.map(toAttachment);
+
+  return { ...email, attachments: smtpAttachments };
+};
+
+export default toSMTPMailData;
