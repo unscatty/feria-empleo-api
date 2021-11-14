@@ -15,7 +15,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Email } from 'src/core/mailer/interfaces/email.interfaces';
 import { IMailerService } from 'src/core/mailer/interfaces/mailer-service.interface';
 import { StateMachineExceptionInterceptor } from 'src/core/state-machines/interceptors/state-machine-exception.interceptor';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
@@ -39,28 +38,6 @@ export class CompanyController {
     private readonly companyService: CompanyService,
     private readonly mailerService: IMailerService
   ) {}
-
-  @Get('mail')
-  @UseInterceptors(FileInterceptor('image'))
-  async sendMail(@Body() body: Email, @UploadedFile() imageFile: UploadedFileMetadata) {
-    body.attachments = [
-      {
-        filename: imageFile.originalname,
-        content: imageFile.buffer, //.toString('base64'),
-        contentType: imageFile.mimetype,
-        // encoding: 'base64',
-      } as any,
-    ];
-
-    console.log(typeof imageFile.buffer);
-
-    console.log(`econding: ${imageFile.encoding}`);
-    console.log(`myme type: ${imageFile.mimetype}`);
-
-    console.log(body.attachments[0].content);
-
-    await this.mailerService.sendMail(body);
-  }
 
   @Post('')
   @Allow(RoleType.ADMIN)

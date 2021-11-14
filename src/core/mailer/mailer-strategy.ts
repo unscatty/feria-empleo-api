@@ -1,7 +1,7 @@
 enum MailerStrategy {
-  SENDGRID = 'SENDGRID',
-  SMTP = 'SMTP',
-  MAILGUN = 'MAILGUN',
+  SENDGRID,
+  SMTP,
+  MAILGUN,
 }
 
 export default MailerStrategy;

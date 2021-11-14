@@ -30,4 +30,6 @@ export enum EnvConfig {
   MAILGUN_URL = 'MAILGUN_URL',
   MAILGUN_PUBLIC_KEY = 'MAILGUN_PUBLIC_KEY',
   MAILGUN_TIMEOUT = 'MAILGUN_TIMEOUT',
+  // Mailer service
+  USE_MAILER = 'USE_MAILER',
 }
