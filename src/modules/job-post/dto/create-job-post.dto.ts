@@ -7,6 +7,12 @@ export class CreateJobPostDto {
   readonly jobTitle: string;
 
   @IsNotEmpty()
+  readonly jobType: string;
+
+  @IsNotEmpty()
+  readonly jobMode: string;
+
+  @IsNotEmpty()
   readonly description: string;
 
   @IsNotEmpty()
