@@ -15,7 +15,7 @@ export class ExperienceDetail extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'bit', nullable: false, default: false })
+  @Column({ nullable: false, default: false })
   isCurrentjob: boolean;
 
   @Column({ type: 'date', nullable: false })
@@ -50,5 +50,5 @@ export class ExperienceDetail extends BaseEntity {
   @ManyToOne(() => Candidate, {
     nullable: false,
   })
-  candidate: Candidate;
+  candidate: Candidate | number;
 }

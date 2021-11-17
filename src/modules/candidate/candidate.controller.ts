@@ -2,6 +2,7 @@ import { UploadedFileMetadata } from '@nestjs/azure-storage';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -21,6 +22,7 @@ import { UserService } from '../user/user.service';
 import { CandidateService } from './candidate.service';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { FilterCandidateDto } from './dto/filter-candidate.dto';
+import { UpdateCandidateDto } from './dto/update-candidate.dto';
 
 @Controller('candidate')
 export class CandidateController {
@@ -57,7 +59,7 @@ export class CandidateController {
   @Put('update')
   @Transaction()
   async updateCandidate(
-    @Body() updateCandidateDto: CreateCandidateDto,
+    @Body() updateCandidateDto: UpdateCandidateDto,
     @GetUser() user: User,
     @TransactionManager() manager: EntityManager
   ) {
@@ -75,5 +77,17 @@ export class CandidateController {
   ) {
     const candidate = await this.userService.getCandidate(user);
     return this.candidateService.updateResume(resume, candidate, manager);
+  }
+
+  @Delete('education-detail/:id')
+  async deleteEducationDetail(@Param('id') id: number, @GetUser() user: User) {
+    const candidate = await this.userService.getCandidate(user);
+    return this.candidateService.deleteEducationDetail(id, candidate);
+  }
+
+  @Delete('experience-detail/:id')
+  async deleteExperienceDetail(@Param('id') id: number, @GetUser() user: User) {
+    const candidate = await this.userService.getCandidate(user);
+    return this.candidateService.deleteExperienceDetail(id, candidate);
   }
 }

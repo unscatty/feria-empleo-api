@@ -47,6 +47,9 @@ export class ExperienceDetailDto {
 }
 
 export class EducationDetailDto {
+  @IsOptional()
+  id: number;
+
   @IsNotEmpty()
   @IsString()
   institutionName: string;
