@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Email, IMailerService } from 'src/core/mailer';
 import { getApplyTemplate } from 'src/templates/apply.template';
-import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
+import { EntityManager, FindOneOptions, getManager, InsertResult, Repository, In } from 'typeorm';
 import { UploadedImage } from '../../core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils';
 import { Candidate } from '../candidate/models/candidate.entity';
@@ -151,20 +151,22 @@ export class JobPostService {
     user: User,
     image?: UploadedFileMetadata
   ): Promise<JobPost> {
-    const findQuery: FindOneOptions<JobPost> = { where: { id } };
-
-    // if a new array of tags is sent join with skillSets
-    if (dto.skillSets) {
-      findQuery.relations = ['tags'];
-    }
-
-    const currentJobPost = await this.jobPostRepository.findOne(findQuery);
-
-    // check job post belongs to the company
-    if (!currentJobPost || currentJobPost.company.id != user.company.id) {
-      throw new NotFoundException('JOB_POST_NOT_FOUND');
-    }
     return await getManager().transaction(async (manager) => {
+      const findQuery: FindOneOptions<JobPost> = { where: { id } };
+
+      // if a new array of tags is sent join with skillSets
+      if (dto.skillSets) {
+        findQuery.relations = ['tags'];
+      }
+
+      const currentJobPost = await this.jobPostRepository.findOne(findQuery);
+      const company = await manager.findOne(Company, { where: { user: user.id } });
+
+      // check job post belongs to the company
+      if (!currentJobPost || currentJobPost.company.id != company.id) {
+        throw new NotFoundException('JOB_POST_NOT_FOUND');
+      }
+
       // update current job post
       manager.merge(JobPost, currentJobPost, dto as any);
 
@@ -193,9 +195,9 @@ export class JobPostService {
             .createQueryBuilder()
             .from(JobPostTag, 'tags')
             .delete()
-            .where('tag_id IN (:...tags) AND job_post_id = :id', {
-              tags: skillSetsToDelete.map((s) => s.id),
-              id,
+            .where({
+              tagId: In(skillSetsToDelete.map((s) => s.id)),
+              jobPostId: id,
             })
             .execute();
         }
@@ -257,8 +259,8 @@ export class JobPostService {
     // find all skill sets that already exists in database
     const skillSetsInDb = await manager
       .createQueryBuilder(SkillSet, 'skill')
-      .where('skill.slug IN (:slugs)', {
-        slugs: skillSetsWithSlug.map((s) => s.slug),
+      .where({
+        slug: In(skillSetsWithSlug.map((s) => s.slug)),
       })
       .getMany();
 
