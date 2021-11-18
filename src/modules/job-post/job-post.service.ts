@@ -1,25 +1,18 @@
 import { AzureStorageService, UploadedFileMetadata } from '@nestjs/azure-storage';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { Email, IMailerService } from 'src/core/mailer';
 import { getApplyTemplate } from 'src/templates/apply.template';
 import { EntityManager, FindOneOptions, getManager, InsertResult, Repository } from 'typeorm';
 import { UploadedImage } from '../../core/entities/uploaded-image.entity';
 import { getSlug } from '../../shared/utils';
+import { Candidate } from '../candidate/models/candidate.entity';
+import { Company } from '../company/entities/company.entity';
 import { SkillSet } from '../skill-set/entities/skill-set.entity';
 import { RoleType, User } from '../user/entities/user.entity';
 import { CreateJobPostDto, FilterJobPostsDto, UpdateJobPostDto } from './dto';
 import { JobApplication, JobPost, JobPostTag } from './entities';
-import { EmailService } from '../../core/providers/mail/email.service';
-import { Company } from '../company/entities/company.entity';
-import { Email } from 'src/core/providers/mail/email';
-import { IEmail } from 'src/shared/interfaces';
-import { Candidate } from '../candidate/models/candidate.entity';
 @Injectable()
 export class JobPostService {
   constructor(
@@ -30,7 +23,7 @@ export class JobPostService {
     @InjectRepository(UploadedImage)
     private uploadedImageRepository: Repository<UploadedImage>,
     private readonly azureStorage: AzureStorageService,
-    private mailService: EmailService
+    private mailService: IMailerService
   ) {}
 
   async findAllJobPosts(dto: FilterJobPostsDto): Promise<Pagination<JobPost>> {
@@ -247,7 +240,7 @@ export class JobPostService {
       await manager.save(jobApplication);
       const template = getApplyTemplate(candidate, jobPostExists.jobTitle);
       const mailOptions = this.createEmailOptions(jobPostExists.company, template, jobPostExists);
-      await this.mailService.sendEmail(mailOptions);
+      await this.mailService.sendMail(mailOptions);
 
       return { apply: true };
     });
@@ -322,14 +315,12 @@ export class JobPostService {
   }
 
   private createEmailOptions(company: Company, template: string, jobPost: JobPost): Email {
-    const mailOption: IEmail = {
-      header: `Aplicación a la vacante ${jobPost.jobTitle}`,
-      from: process.env.EMAIL_FROM,
-      password: process.env.EMAIL_PASSWORD,
-      server: process.env.EMAIL_SERVER,
+    const mailOption: Email = {
+      subject: `Aplicación a la vacante ${jobPost.jobTitle}`,
       to: company.activeEmail,
-      message: template,
+      html: template,
     };
-    return new Email(mailOption);
+
+    return mailOption;
   }
 }

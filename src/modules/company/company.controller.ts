@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -14,6 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { IMailerService } from 'src/core/mailer/interfaces/mailer-service.interface';
 import { StateMachineExceptionInterceptor } from 'src/core/state-machines/interceptors/state-machine-exception.interceptor';
 import { EntityManager, Transaction, TransactionManager } from 'typeorm';
 import { Public } from '../auth/decorators/public.decorator';
@@ -26,11 +28,16 @@ import { RoleType, User } from '../user/entities/user.entity';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { FilterCompanyDto } from './dto/filter-company.dto';
+import { UpdateCompanyDto } from './dto/update-company.dto';
+import { UpdateImageDto } from './dto/update-image.dto';
 import { Company } from './entities/company.entity';
 
 @Controller('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(
+    private readonly companyService: CompanyService,
+    private readonly mailerService: IMailerService
+  ) {}
 
   @Post('')
   @Allow(RoleType.ADMIN)
@@ -92,6 +99,33 @@ export class CompanyController {
   @Put(':id')
   updateCompany(@Param('id') id: number, @Body() company: Company) {
     return this.companyService.updateCompany(id, company);
+  }
+
+  @Put('')
+  @SerializeOptions({ groups: [RoleGroup.CURRENT_USER] })
+  @Allow(RoleType.COMPANY)
+  async updateCurrent(
+    @Body() updateCompanyDto: UpdateCompanyDto,
+    @GetUser() user: User
+  ): Promise<Company> {
+    const currentCompany = await this.companyService.getCurrent(user);
+
+    return this.companyService.update(currentCompany, updateCompanyDto);
+  }
+
+  @Patch('update-image')
+  @Allow(RoleType.COMPANY)
+  @UseInterceptors(FileInterceptor('image'))
+  async updateImageCurrent(
+    @UploadedFile() imageFile: UploadedFileMetadata,
+    @Body() imageDto: UpdateImageDto,
+    @GetUser() user: User
+  ) {
+    imageDto.image = imageFile;
+
+    const currentCompany = await this.companyService.getCurrent(user);
+
+    return this.companyService.updateImage(currentCompany, imageDto);
   }
 
   @Delete(':id')

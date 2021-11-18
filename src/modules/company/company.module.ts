@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvConfig } from 'src/config/config.keys';
-import { EmailService } from 'src/core/providers/mail/email.service';
 import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { Role } from '../user/entities/role.entity';
 import { User } from '../user/entities/user.entity';
@@ -29,6 +28,6 @@ import { CoreModule } from 'src/core/core.module';
     }),
   ],
   controllers: [CompanyController],
-  providers: [CompanyService, EmailService, CompanyEmailService, AzureStorageService],
+  providers: [CompanyService, CompanyEmailService, AzureStorageService],
 })
 export class CompanyModule {}

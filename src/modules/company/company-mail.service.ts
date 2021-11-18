@@ -1,22 +1,17 @@
-import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { sign } from 'jsonwebtoken';
-
+import { EnvConfig } from 'src/config/config.keys';
+import { Email, IMailerService } from 'src/core/mailer';
+import invitationTemplate from 'src/templates/invitation-template';
+import { CustomLogger } from '../../library/logger';
 import { companyLabels } from './company-labels';
 import { CreateCompanyDto } from './dto/create-company.dto';
-import { CustomLogger } from '../../library/logger';
-import { Email } from 'src/core/providers/mail/email';
-import { EmailService } from 'src/core/providers/mail/email.service';
-import { EnvConfig } from 'src/config/config.keys';
-import { IEmail } from 'src/shared/interfaces/';
-import invitationTemplate from 'src/templates/invitation-template';
-
-// config();
 
 @Injectable()
 export class CompanyEmailService {
   private logger = new CustomLogger('CompanyEmailService');
-  constructor(private mailService: EmailService, private config: ConfigService) {}
+  constructor(private mailService: IMailerService, private config: ConfigService) {}
 
   public async sendInvitation(companyToInvite: CreateCompanyDto) {
     try {
@@ -24,7 +19,7 @@ export class CompanyEmailService {
       const template = this.setInvitationTemplate(companyToInvite, url);
       const mail = this.createEmailOptions(companyToInvite, template);
 
-      await this.mailService.sendEmail(mail);
+      await this.mailService.sendMail(mail);
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -47,14 +42,11 @@ export class CompanyEmailService {
   }
 
   private createEmailOptions(companyToInvite: CreateCompanyDto, template: string): Email {
-    const mailOption: IEmail = {
-      header: companyLabels.mailHeader,
-      from: process.env.EMAIL_FROM,
-      password: process.env.EMAIL_PASSWORD,
-      server: process.env.EMAIL_SERVER,
+    const mailOption: Email = {
+      subject: companyLabels.mailHeader,
       to: companyToInvite.email,
-      message: template,
+      html: template,
     };
-    return new Email(mailOption);
+    return mailOption;
   }
 }

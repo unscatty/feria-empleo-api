@@ -10,7 +10,13 @@ import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EnvConfig } from 'src/config/config.keys';
 import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import { COMPANY_GRAPH_NAME, COMPANY_TRANSITIONS } from 'src/core/state-machines/company.graph';
-import { EntityManager, FindConditions, Repository } from 'typeorm';
+import {
+  EntityManager,
+  FindConditions,
+  Repository,
+  Transaction,
+  TransactionManager,
+} from 'typeorm';
 import { CreateUserDto } from '../user/dto';
 import { Role } from '../user/entities/role.entity';
 import { RoleType, User } from '../user/entities/user.entity';
@@ -19,10 +25,14 @@ import { companyLabels } from './company-labels';
 import { CompanyEmailService } from './company-mail.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { FilterCompanyDto } from './dto/filter-company.dto';
+import { UpdateCompanyDto } from './dto/update-company.dto';
+import { UpdateImageDto } from './dto/update-image.dto';
 import { Company } from './entities/company.entity';
 
 @Injectable()
 export class CompanyService {
+  getCurrent: typeof UserService.prototype.getCompany;
+
   constructor(
     @InjectRepository(Company)
     private companyRepository: Repository<Company>,
@@ -37,7 +47,9 @@ export class CompanyService {
     private userService: UserService,
     private readonly azureStorage: AzureStorageService,
     private readonly stateMachineFactory: StateMachineFactory
-  ) {}
+  ) {
+    this.getCurrent = this.userService.getCompany;
+  }
 
   private getStateMachine(company: Company): StateMachine<Company> {
     // TODO: inject graph name
@@ -76,8 +88,8 @@ export class CompanyService {
 
     if (imageFile) {
       uploadedImage = await this.uploadImageFile(imageFile, companyToInvite.email);
-    } else if (companyToInvite.imageURL && companyToInvite.imageURL === '') {
-      uploadedImage = await this.uploadedImageRepository.create({
+    } else if (companyToInvite.imageURL && companyToInvite.imageURL !== '') {
+      uploadedImage = this.uploadedImageRepository.create({
         imageURL: companyToInvite.imageURL,
       });
     }
@@ -168,6 +180,43 @@ export class CompanyService {
       throw new NotFoundException(companyLabels.errors.updateCompanyError);
     }
     return company;
+  }
+
+  // Update image from uploaded file
+  @Transaction()
+  public async updateImage(
+    company: Company,
+    updateImageDto: UpdateImageDto,
+    @TransactionManager() manager?: EntityManager
+  ): Promise<string> {
+    const uploadedImage = await this.uploadImageFile(updateImageDto.image, company.invitationEmail);
+
+    company.image = uploadedImage;
+
+    const updatedCompany =
+      (await manager?.save(company)) || (await this.companyRepository.save(company));
+
+    return updatedCompany.image.imageURL;
+  }
+
+  @Transaction()
+  public async update(
+    company: Company,
+    updateCompanyDto: UpdateCompanyDto,
+    @TransactionManager() manager?: EntityManager
+  ): Promise<Company> {
+    // Merge company data with DTO data to update it later in the database
+    const mergedWithDto = manager.merge(Company, company, {
+      ...updateCompanyDto,
+      // Use either invitation email or user email as current active email
+      // Do not change if no option present in DTO
+      activeEmail: company.getAvailableEmail(updateCompanyDto.useEmail),
+    });
+
+    // Update merged data
+    const updatedCompany = await manager.save(mergedWithDto);
+
+    return updatedCompany;
   }
 
   public async deleteCompany(id: string | number) {
