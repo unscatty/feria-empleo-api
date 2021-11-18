@@ -211,13 +211,17 @@ export class JobPostService {
   }
 
   async deleteJobPost(id: number, user: User): Promise<JobPost> {
-    const currentJobPost = await this.findOneJobPost(id);
-    // check job post belongs to the company and is not admin user
-    if (user.role.name !== RoleType.ADMIN && currentJobPost.company.id != user.company.id) {
-      throw new NotFoundException('JOB_POST_NOT_FOUND');
-    }
-    this.jobPostRepository.merge(currentJobPost, { isActive: false });
-    return this.jobPostRepository.save(currentJobPost);
+    return await getManager().transaction(async (manager) => {
+      const currentJobPost = await this.findOneJobPost(id);
+      const company = await manager.findOne(Company, { where: { user: user.id } });
+
+      // check job post belongs to the company and is not admin user
+      if (user.role.name !== RoleType.ADMIN && currentJobPost.company.id != company.id) {
+        throw new NotFoundException('JOB_POST_NOT_FOUND');
+      }
+      this.jobPostRepository.merge(currentJobPost, { isActive: false });
+      return this.jobPostRepository.save(currentJobPost);
+    });
   }
 
   async applyToJobPost(jobPostId: number, candidate: Candidate) {
