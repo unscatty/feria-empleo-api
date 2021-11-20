@@ -29,6 +29,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { Company } from './entities/company.entity';
 
+const MAX_COMPANIES = 70;
 @Injectable()
 export class CompanyService {
   getCurrent: typeof UserService.prototype.getCompany;
@@ -109,7 +110,7 @@ export class CompanyService {
   }
 
   public async findAll(dto: FilterCompanyDto): Promise<Pagination<Company>> {
-    return paginate<Company>(this.companyRepository, dto);
+    return paginate<Company>(this.companyRepository, {...dto, limit: MAX_COMPANIES});
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
