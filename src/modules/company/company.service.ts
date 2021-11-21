@@ -110,7 +110,7 @@ export class CompanyService {
   }
 
   public async findAll(dto: FilterCompanyDto): Promise<Pagination<Company>> {
-    return paginate<Company>(this.companyRepository, {...dto, limit: MAX_COMPANIES});
+    return paginate<Company>(this.companyRepository, { ...dto, limit: MAX_COMPANIES });
   }
 
   public async retrieveOneCompany(companyId: number): Promise<Company> {
@@ -207,11 +207,13 @@ export class CompanyService {
     @TransactionManager() manager?: EntityManager
   ): Promise<Company> {
     // Merge company data with DTO data to update it later in the database
+    const { useEmail, ...updateFields } = updateCompanyDto;
+
     const mergedWithDto = manager.merge(Company, company, {
-      ...updateCompanyDto,
+      ...updateFields,
       // Use either invitation email or user email as current active email
       // Do not change if no option present in DTO
-      activeEmail: company.getAvailableEmail(updateCompanyDto.useEmail),
+      activeEmail: company.getAvailableEmail(useEmail),
     });
 
     // Update merged data
