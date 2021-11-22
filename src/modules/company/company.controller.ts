@@ -114,6 +114,7 @@ export class CompanyController {
   }
 
   @Patch('update-image')
+  @SerializeOptions({ groups: [RoleGroup.CURRENT_USER] })
   @Allow(RoleType.COMPANY)
   @UseInterceptors(FileInterceptor('image'))
   async updateImageCurrent(
