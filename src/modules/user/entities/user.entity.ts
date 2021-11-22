@@ -1,5 +1,3 @@
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
-import { TransformToPlain } from 'src/shared/decorators/class-transform';
 import {
   BaseEntity,
   Column,
@@ -8,8 +6,10 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
+import { TransformToPlain } from '../../../shared/decorators/class-transform';
+import { Candidate } from '../../candidate/models/candidate.entity';
 import { Company } from '../../company/entities/company.entity';
 import { ContactDetail } from './contact-detail.entity';
 import { Role, RoleType } from './role.entity';

@@ -11,11 +11,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from 'src/modules/user/entities/user.entity';
-import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
+import { JobApplication } from '../../job-post/entities/job-application.entity';
+import { SkillSet } from '../../skill-set/entities/skill-set.entity';
+import { User } from '../../user/entities/user.entity';
 import { EducationDetail } from './education-detail.entity';
 import { ExperienceDetail } from './experience-detail.entity';
-import { JobApplication } from '../../job-post/entities/job-application.entity';
 
 @Entity()
 export class Candidate extends BaseEntity {

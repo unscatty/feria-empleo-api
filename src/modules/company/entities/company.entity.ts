@@ -1,3 +1,4 @@
+import { StateStore } from '@depthlabs/nestjs-state-machine';
 import {
   BaseEntity,
   Column,
@@ -9,14 +10,13 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UploadedImage } from '../../../core/entities/uploaded-image.entity';
+import { COMPANY_GRAPH_NAME, COMPANY_STATES } from '../../../core/state-machines/company.graph';
+import { ExposeToPlain, TransformToPlain } from '../../../shared/decorators/class-transform';
+import { ExposeAdminDefault } from '../../../shared/decorators/expose-role-groups';
+import { JobPost } from '../../job-post/entities/job-post.entity';
+import { RoleGroup } from '../../user/entities/role.entity';
 import { User } from '../../user/entities/user.entity';
-import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
-import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
-import { StateStore } from '@depthlabs/nestjs-state-machine';
-import { COMPANY_GRAPH_NAME, COMPANY_STATES } from 'src/core/state-machines/company.graph';
-import { ExposeToPlain, TransformToPlain } from 'src/shared/decorators/class-transform';
-import { RoleGroup } from 'src/modules/user/entities/role.entity';
-import { ExposeAdminDefault } from 'src/shared/decorators/expose-role-groups';
 
 export enum CompanyUseEmailOptions {
   INVITATION = 'INVITATION',

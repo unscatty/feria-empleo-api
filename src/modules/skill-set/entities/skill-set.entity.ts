@@ -1,5 +1,3 @@
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
-import { JobPost } from 'src/modules/job-post/entities/job-post.entity';
 import {
   BaseEntity,
   Column,
@@ -9,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Candidate } from '../../candidate/models/candidate.entity';
+import { JobPost } from '../../job-post/entities';
 
 @Entity()
 export class SkillSet extends BaseEntity {

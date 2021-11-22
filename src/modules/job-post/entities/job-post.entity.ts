@@ -1,7 +1,3 @@
-import { Candidate } from 'src/modules/candidate/models/candidate.entity';
-import { Company } from 'src/modules/company/entities/company.entity';
-import { SkillSet } from 'src/modules/skill-set/entities/skill-set.entity';
-import { UploadedImage } from 'src/core/entities/uploaded-image.entity';
 import {
   BaseEntity,
   Column,
@@ -16,7 +12,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TransformToPlain } from 'src/shared/decorators/class-transform';
+import { UploadedImage } from '../../../core/entities/uploaded-image.entity';
+import { TransformToPlain } from '../../../shared/decorators/class-transform';
+import { Company } from '../../company/entities/company.entity';
+import { SkillSet } from '../../skill-set/entities/skill-set.entity';
 import { JobApplication } from './job-application.entity';
 
 export enum JobPostType {

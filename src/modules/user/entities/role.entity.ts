@@ -1,5 +1,5 @@
-import { ExcludeToPlain } from 'src/shared/decorators/class-transform';
 import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { ExcludeToPlain } from '../../../shared/decorators/class-transform';
 
 export enum RoleType {
   ADMIN = 'ADMIN',

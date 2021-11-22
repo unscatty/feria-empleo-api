@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
-import { RoleGroup } from 'src/modules/user/entities/role.entity';
+import { RoleGroup } from '../../modules/user/entities/role.entity';
 
 // Merge @Expose groups with `defaultGroups` if present
 export const ExposeDefaultGroups = (defaultGroups: string[]): ClassDecorator => {
