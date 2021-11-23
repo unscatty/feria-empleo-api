@@ -32,7 +32,7 @@ export class JobPostService {
 
     const paginationOptions: IPaginationOptions = {
       page: dto.page,
-      limit: dto.limit,
+      limit: 100,
     };
     if (dto) {
       query.leftJoinAndSelect('job_post.tags', 'tags');
