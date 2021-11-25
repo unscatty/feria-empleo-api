@@ -143,9 +143,15 @@ export class CompanyService {
   }
 
   public async validateInvitationToken(token: string): Promise<Company> {
-    const payload = await verify(token, this.config.get(EnvConfig.JWT_SECRET), {
-      ignoreExpiration: false,
-    });
+    let payload: any;
+
+    try {
+      payload = verify(token, this.config.get(EnvConfig.JWT_SECRET), {
+        ignoreExpiration: false,
+      });
+    } catch (error) {
+      throw error;
+    }
 
     const email = payload['email'] as string;
 

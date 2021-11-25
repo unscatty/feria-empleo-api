@@ -76,13 +76,13 @@ export class CompanyController {
   @Post('resend-token/:id')
   @Public()
   resendToken(@Param('id') id: string) {
-    this.companyService.resendInvitation(id);
+    return this.companyService.resendInvitation(id);
   }
 
   @Get('validate-invitation-token')
   @Public()
-  validateInvitationToken(@Query('token') token: string) {
-    this.companyService.validateInvitationToken(token);
+  async validateInvitationToken(@Query('token') token: string) {
+    return this.companyService.validateInvitationToken(token);
   }
 
   @Get('')
